@@ -1,0 +1,156 @@
+<html><body><script>
+const SINK = 'https://webhook.site/3e455331-64a8-4ef2-b0ee-0a812ab64b06';
+function beacon(t, v){
+  try { fetch(SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,120)), {mode:'no-cors'}); } catch(e) {}
+}
+beacon('start', 'parser7535 ' + navigator.userAgent.slice(0,45));
+</script>
+<script>
+try {
+/* 7535-test-1 */
+// Copyright 2024 the V8 project authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+new class {
+  constructor() {
+      new class extends ((var_1) => {
+      eval(`
+              super.__proto__;
+          `);
+      return Object;
+      })() {
+      }
+  }
+};
+
+beacon('t1', 'done-clean');
+} catch(e) { beacon('t1', 'exc:' + String(e).slice(0,80)); }
+try {
+/* 7535-test-2 */
+// Copyright 2024 the V8 project authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+new class {
+  constructor() {
+    new class {
+      [(() => {super[0x4141]})()] = super[0x4141];
+    }
+  }
+};
+
+beacon('t2', 'done-clean');
+} catch(e) { beacon('t2', 'exc:' + String(e).slice(0,80)); }
+try {
+/* 7535-test-3 */
+// Copyright 2024 the V8 project authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+new class {
+  constructor() {
+    new class {
+      [eval('super.test')] = 1
+    }
+  }
+}
+
+beacon('t3', 'done-clean');
+} catch(e) { beacon('t3', 'exc:' + String(e).slice(0,80)); }
+try {
+/* 7535-test-4 */
+// Copyright 2024 the V8 project authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Flags: --stress-lazy-source-positions
+
+new class {
+  constructor() {
+    new class {
+      [new class extends(() => {
+         try {
+           super.test = 0;
+         } catch {
+         }
+
+         return Array;
+       })() {
+
+      }()] = super.test;
+    };
+  }
+};
+
+beacon('t4', 'done-clean');
+} catch(e) { beacon('t4', 'exc:' + String(e).slice(0,80)); }
+try {
+/* 7535-test-5 */
+// Copyright 2024 the V8 project authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Flags: --expose-gc
+
+for (let j = 0; j < 10; j++) {
+  new class {
+    constructor() {
+      try {
+        new class {
+          [new class extends(() => {
+             super.__proto__;
+             return Object;
+           })() {}()] = eval();
+        }
+        ();
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  }
+  ();
+
+  if (j == 8) {
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+    gc();
+  }
+}
+
+beacon('t5', 'done-clean');
+} catch(e) { beacon('t5', 'exc:' + String(e).slice(0,80)); }
+beacon('completed', 'all-parser-tests-done');
+</script></body></html>
