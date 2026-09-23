@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CentralStoreConfiguration>
+    <Version>113</Version>
+    <Model>clickshare_4_2</Model>
+    <ParameterList>
+        <Parameter>
+            <Name>BaseUnit.Displays.StandbyTime</Name>
+            <Value>0</Value>
+        </Parameter>
+        <Parameter>
+            <Name>BaseUnit.Displays.ScreenSaver.Timeout</Name>
+            <Value>Infinite</Value>
+        </Parameter>
+    </ParameterList>
+</CentralStoreConfiguration>
