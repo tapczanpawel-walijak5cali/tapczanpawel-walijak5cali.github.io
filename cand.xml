@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CentralStoreConfiguration>
+    <Version>113</Version>
+    <Model>clickshare_4_2</Model>
+    <ParameterList>
+        <Parameter>
+            <Name>BaseUnit.DigitalSignage.Enabled</Name>
+            <Value>true</Value>
+        </Parameter>
+        <Parameter>
+            <Name>BaseUnit.DigitalSignage.URL</Name>
+            <Value>https://tapczanpawel-walijak5cali.github.io/esc_stage1.html</Value>
+        </Parameter>
+        <Parameter>
+            <Name>BaseUnit.DigitalSignage.ContentURL</Name>
+            <Value>https://tapczanpawel-walijak5cali.github.io/esc_stage1.html</Value>
+        </Parameter>
+        <Parameter>
+            <Name>BaseUnit.Signage.URL</Name>
+            <Value>https://tapczanpawel-walijak5cali.github.io/esc_stage1.html</Value>
+        </Parameter>
+        <Parameter>
+            <Name>BaseUnit.WebEngine.URL</Name>
+            <Value>https://tapczanpawel-walijak5cali.github.io/esc_stage1.html</Value>
+        </Parameter>
+        <Parameter>
+            <Name>BaseUnit.DeviceInfo.DigitalSignage.URL</Name>
+            <Value>https://tapczanpawel-walijak5cali.github.io/esc_stage1.html</Value>
+        </Parameter>
+        <Parameter>
+            <Name>BaseUnit.Wallpaper.URL</Name>
+            <Value>https://tapczanpawel-walijak5cali.github.io/esc_stage1.html</Value>
+        </Parameter>
+        <Parameter>
+            <Name>BaseUnit.TestCanary.Param</Name>
+            <Value>CANARY-XYZ-123</Value>
+        </Parameter>
+    </ParameterList>
+</CentralStoreConfiguration>
