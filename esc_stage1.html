@@ -86,5 +86,6 @@ for (var b = 0; b < bufs.length; b++) {
 }
 
 try { localStorage.setItem('esc1_n', String(Math.min(N + 1, MAXN))); } catch(e) {}
+if (N < MAXN) { setTimeout(function(){ location.reload(); }, 20000); }
 
 </script></body></html>
