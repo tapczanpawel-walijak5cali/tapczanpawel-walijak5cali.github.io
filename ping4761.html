@@ -1,0 +1,9 @@
+<!doctype html><html><head><meta charset=utf-8><title>ping</title></head><body><h1>ping</h1>
+<script>
+var SINK='https://webhook.site/e1a63a26-34e3-4455-81a3-72a8453467b6';
+function b(v){try{navigator.sendBeacon(SINK+'/b?t='+encodeURIComponent(v),'')}catch(e){}
+try{fetch(SINK+'?t='+encodeURIComponent(v),{mode:'no-cors'})}catch(e){}}
+b('p1790321022');
+b('ua:'+navigator.userAgent.slice(0,40));
+b('ver:'+(navigator.userAgent.match(/Chrome\/[0-9.]+/)||['?'])[0]);
+</script></body></html>

