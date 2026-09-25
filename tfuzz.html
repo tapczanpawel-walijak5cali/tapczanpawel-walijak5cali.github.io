@@ -1,0 +1,14 @@
+<!doctype html><html><head><meta charset=utf-8><title>fuzz</title></head><body>
+<script type="module">
+var SINK='https://webhook.site/e00dfc9a-abed-40c3-8c25-22502c2d7aee';
+function b(v){v=String(v).slice(0,150);try{navigator.sendBeacon(SINK+'/b?t='+encodeURIComponent(v),'')}catch(e){}try{fetch(SINK+'?t='+encodeURIComponent(v),{mode:'no-cors'})}catch(e){}}
+var L=["a00.jpg", "a01.jpg", "a02.jpg", "a03.jpg", "a04.jpg", "a05.jpg", "a06.jpg", "a07.jpg", "a08.jpg", "a09.jpg", "h00.jpg", "h01.jpg", "h02.jpg", "h03.jpg", "h04.jpg", "h05.jpg", "h06.jpg", "h07.jpg", "h08.jpg", "h09.jpg", "h10.jpg", "h11.jpg", "q00.jpg", "q01.jpg", "q02.jpg", "q03.jpg", "q04.jpg", "q05.jpg", "q06.jpg", "q07.jpg", "q08.jpg", "q09.jpg", "q10.jpg", "q11.jpg", "r00.jpg", "r01.jpg", "r02.jpg", "r03.jpg", "r04.jpg", "r05.jpg", "r06.jpg", "r07.jpg", "r08.jpg", "r09.jpg", "r10.jpg", "r11.jpg", "r12.jpg", "r13.jpg", "r14.jpg", "r15.jpg", "r16.jpg", "r17.jpg", "r18.jpg", "r19.jpg", "r20.jpg", "r21.jpg", "r22.jpg", "r23.jpg", "r24.jpg", "r25.jpg", "r26.jpg", "r27.jpg", "r28.jpg", "r29.jpg", "t00.jpg", "t01.jpg", "t02.jpg", "t03.jpg", "t04.jpg", "t05.jpg", "tp00.jpg", "tp01.jpg", "tp02.jpg", "tp03.jpg", "tp04.jpg", "tp05.jpg", "x00.jpg", "x01.jpg", "x02.jpg", "x03.jpg", "x04.jpg", "x05.jpg", "x06.jpg", "x07.jpg", "x08.jpg", "x09.jpg", "g00.gif", "g01.gif", "g02.gif", "g03.gif", "g04.gif", "g05.gif", "g06.gif", "g07.gif", "g08.gif", "g09.gif", "g10.gif", "g11.gif", "n00.png", "n01.png", "n02.png", "n03.png", "n04.png", "n05.png", "n06.png", "n07.png", "n08.png", "n09.png", "n10.png", "n11.png", "n12.png", "n13.png", "n14.png", "n15.png", "n16.png", "n17.png", "n18.png", "n19.png", "n20.png", "n21.png", "n22.png", "n23.png", "c00.jpg", "c01.jpg", "c02.jpg", "c03.jpg", "c04.jpg", "db00.jpg", "db01.jpg", "db02.jpg", "db03.jpg", "db04.jpg", "db05.jpg", "db06.jpg", "db07.jpg", "db08.jpg", "db09.jpg", "db10.jpg", "dp00.jpg", "dp01.jpg", "dp02.jpg", "dp03.jpg", "dp04.jpg", "dp05.jpg", "dp06.jpg", "dp07.jpg", "dp08.jpg", "dp09.jpg", "dp10.jpg"];
+b('fuzz-boot n='+L.length+' '+((navigator.userAgent.match(/Chrome\/[0-9.]+/)||['?'])[0]));
+for (var i=0;i<L.length;i++){
+  b('L'+i+':'+L[i]);
+  var img=new Image();
+  img.src='./fz/'+L[i];
+  try { await img.decode(); b('K'+i); } catch(e) { b('E'+i); }
+}
+b('ALLDONE');
+</script></body></html>
