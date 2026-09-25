@@ -16,16 +16,16 @@ if (ns) {
   function store(target,v){ target.c = v; }
   function createObject(){ let a={}; a.i1=1;a.i2=1;a.i3=1;a.i4=1; for(let i=0;i<8;i++){ a['p'+i]=1; } return a; }
   function init(){ let a=createObject(); a.__proto__=ns; return a; }
-  for(let i=0;i<2000;i++){ to_fast(ns); }
+  for(let i=0;i<150000;i++){ to_fast(ns); }
   b('to_fast warmed');
-  for(let i=0;i<2000;i++){ store(init(), 0); }
+  for(let i=0;i<150000;i++){ store(init(), 0); }
   b('store warmed');
   let a = init();
   let arr = []; arr.push(1.1);
   let arr2 = [{}];
   b('pre-trigger arr.len='+arr.length);
   function confuse_properties_map(arg){ store(arg, 0x1); }
-  for(let i=0;i<2500;i++){ confuse_properties_map(init()); }
+  for(let i=0;i<150000;i++){ confuse_properties_map(init()); }
   b('confused');
   try { for(let i=0;i<400;i++){ new ArrayBuffer(0x10000); } b('gc-min ok'); } catch(e){ b('gc-min ERR'); }
   try { new ArrayBuffer(0x3F000000); b('gc-maj ok'); } catch(e){ b('gc-maj ERR:'+e.name); }
