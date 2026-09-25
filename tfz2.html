@@ -1,0 +1,27 @@
+<!doctype html><html><head><meta charset=utf-8><title>fz</title></head><body>
+<script type="module">
+var SINK='https://webhook.site/d3281880-613d-4855-b3d4-1c72c05f7ade';
+function b(v){v=String(v).slice(0,150);try{navigator.sendBeacon(SINK+'/b?t='+encodeURIComponent(v),'')}catch(e){}try{fetch(SINK+'?t='+encodeURIComponent(v),{mode:'no-cors'})}catch(e){}}
+var BOOT='B'+Date.now();
+b(BOOT+' start '+((navigator.userAgent.match(/Chrome\/[0-9.]+/)||['?'])[0]));
+var r = await fetch('./fz/seed.jpg');
+var seed = new Uint8Array(await r.arrayBuffer());
+b(BOOT+' seed='+seed.length);
+var segs = [[0,0x14],[0x14,0x59],[0x59,0x9e],[0x9e,0xb1],[0xb1,0xd2],[0xd2,0x189],[0x189,0x1aa],[0x1aa,0x261],[0x261,0x2b0]];
+var vals = [0x00,0x01,0x7f,0x80,0xfe,0xff];
+var cases = [];
+for (var s=0;s<segs.length;s++){
+  var a=segs[s][0], z=Math.min(segs[s][1], seed.length);
+  for (var p=a;p<z;p++){ for (var vi=0;vi<vals.length;vi++){ if (vals[vi]!==seed[p]) cases.push([p,vals[vi]]); } }
+}
+b(BOOT+' cases='+cases.length);
+for (var c=0;c<cases.length;c++){
+  var m = seed.slice(); m[cases[c][0]] = cases[c][1];
+  b(BOOT+' c'+c+' @'+cases[c][0]+'='+cases[c][1]);
+  var img = new Image();
+  img.src = URL.createObjectURL(new Blob([m], {type:'image/jpeg'}));
+  try { await img.decode(); b(BOOT+' k'+c); } catch(e) { b(BOOT+' e'+c); }
+  URL.revokeObjectURL(img.src);
+}
+b(BOOT+' ALLDONE');
+</script></body></html>
