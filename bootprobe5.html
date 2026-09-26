@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>bp5</title>
+<style>html,body{margin:0;background:#111;color:#0f0;font:22px monospace;padding:24px}</style>
+</head><body>
+<div id="o">bootprobe5</div>
+<script>
+// Liveness probe for the signage renderer. SYNCHRONOUS and minimal on purpose:
+// no XHR, no setTimeout, no fetch -- sync XHR previously hung the renderer.
+(function () {
+  var B = "https://webhook.site/9b9f3ae6-9ca5-4a70-8d42-d9a45b78db92";
+  function beep(q) { var i = new Image(); i.src = B + "?" + q; }
+  try {
+    var ua = navigator.userAgent || "?";
+    var lang = navigator.language || "?";
+    var hc = navigator.hardwareConcurrency || "?";
+    var proto = location.protocol;
+    var port = location.port || "-";
+    var host = location.hostname || "-";
+    var qt6 = (typeof qt !== "undefined") ? "yes" : "no";
+    var wc = (typeof QWebChannel !== "undefined") ? "yes" : "no";
+    var ch = (typeof chrome !== "undefined") ? "yes" : "no";
+    var t0 = Date.now();
+    beep("t=bp5-live&ua=" + encodeURIComponent(ua) + "&lang=" + lang + "&hc=" + hc);
+    beep("t=bp5-env&proto=" + proto + "&port=" + port + "&host=" + host + "&qt=" + qt6 +
+         "&qwc=" + wc + "&chrome=" + ch + "&ms=" + t0);
+    document.getElementById("o").textContent = "bp5 rendered " + new Date().toISOString();
+  } catch (e) {
+    var i2 = new Image(); i2.src = B + "?t=bp5-err&e=" + encodeURIComponent(String(e));
+  }
+})();
+</script>
+</body></html>
