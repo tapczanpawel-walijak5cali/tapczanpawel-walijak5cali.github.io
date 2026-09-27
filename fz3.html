@@ -1,0 +1,25 @@
+<html><body><script>
+// fz3: sequential image-decode fuzz in the ROOT renderer. Self-healing: crash -> auto-reload,
+// hang -> baseunit watchdog kill -> reload; cursor in localStorage survives renderer restarts
+// (tmpfs per boot). Beacon every 5th image; a stall at index N = N is the hang/skip-list entry.
+const SINK='https://webhook.site/357fa988-a269-459a-9207-8043c4ccc157';
+const FILES=["cmyk_prog.jpg", "cmyk_q1.jpg", "dim_cmyk_c0.jpg", "dim_cmyk_c4.jpg", "dim_prog_c2.jpg", "dim_prog_c4.jpg", "dim_rgb_c0.jpg", "dim_rgb_c4.jpg", "opt.jpg", "q001.jpg", "q005.jpg", "q050.jpg", "q095.jpg", "q100.jpg", "rnd000_tr_rgb_50.jpg", "rnd003_tr_cmyk_50.jpg", "rnd005_cmyk_prog.jpg", "rnd006_tr_prog_20.jpg", "rnd008_tr_cmyk_05.jpg", "rnd009_tr_cmyk_20.jpg", "rnd014_tr_prog_90.jpg", "rnd015_tr_prog_99.jpg", "rnd016_tr_prog_65.jpg", "rnd017_opt.jpg", "rnd018_tr_prog_20.jpg", "rnd020_tr_rgb_99.jpg", "rnd021_tr_rgb_20.jpg", "rnd023_opt.jpg", "rnd025_tr_rgb_99.jpg", "rnd028_dim_prog_c4.jpg", "rnd030_tr_rgb_10.jpg", "rnd032_tr_rgb_05.jpg", "rnd033_tr_cmyk_99.jpg", "rnd038_tr_rgb_50.jpg", "rnd039_q100.jpg", "rnd040_tr_rgb_99.jpg", "rnd041_q095.jpg", "rnd042_dim_prog_c2.jpg", "rnd044_tr_prog_99.jpg", "rnd045_tr_prog_99.jpg", "rnd046_seed_cmyk.jpg", "rnd048_tr_prog_90.jpg", "rnd049_tr_prog_65.jpg", "rnd051_tr_cmyk_65.jpg", "rnd052_q001.jpg", "rnd053_tr_cmyk_50.jpg", "rnd054_tr_prog_95.jpg", "rnd055_tr_cmyk_10.jpg", "rnd056_tr_rgb_80.jpg", "rnd057_tr_cmyk_80.jpg", "rnd058_tr_prog_35.jpg", "rnd059_tr_cmyk_90.jpg", "rnd062_tr_cmyk_50.jpg", "rnd064_tr_cmyk_20.jpg", "rnd065_cmyk_q1.jpg", "rnd066_tr_rgb_20.jpg", "rnd067_q050.jpg", "rnd068_cmyk_prog.jpg", "rnd071_tr_rgb_95.jpg", "rnd072_tr_rgb_80.jpg", "rnd074_tr_cmyk_10.jpg", "rnd075_tr_prog_50.jpg", "rnd076_dim_cmyk_c4.jpg", "rnd077_tr_prog_90.jpg", "rnd078_dim_rgb_c0.jpg", "rnd079_subsamp444.jpg", "rnd081_seed_cmyk.jpg", "rnd082_tr_cmyk_80.jpg", "rnd083_tr_prog_35.jpg", "rnd084_q095.jpg", "rnd086_dim_rgb_c0.jpg", "rnd088_tr_cmyk_20.jpg", "rnd089_tr_prog_50.jpg", "seed_cmyk.jpg", "seed_prog.jpg", "seed_rgb.jpg", "subsamp420.jpg", "subsamp444.jpg", "tr_cmyk_05.jpg", "tr_cmyk_10.jpg", "tr_cmyk_20.jpg", "tr_cmyk_35.jpg", "tr_cmyk_50.jpg", "tr_cmyk_65.jpg", "tr_cmyk_80.jpg", "tr_cmyk_90.jpg", "tr_cmyk_95.jpg", "tr_cmyk_99.jpg", "tr_prog_05.jpg", "tr_prog_10.jpg", "tr_prog_20.jpg", "tr_prog_35.jpg", "tr_prog_50.jpg", "tr_prog_65.jpg", "tr_prog_80.jpg", "tr_prog_90.jpg", "tr_prog_95.jpg", "tr_prog_99.jpg", "tr_rgb_05.jpg", "tr_rgb_10.jpg", "tr_rgb_20.jpg", "tr_rgb_35.jpg", "tr_rgb_50.jpg", "tr_rgb_65.jpg", "tr_rgb_80.jpg", "tr_rgb_90.jpg", "tr_rgb_95.jpg", "tr_rgb_99.jpg", "rnd001_tr_cmyk_95.jpg"];
+function beacon(t,v){ try{ var i=new Image(); i.src=SINK+'?t='+encodeURIComponent(t)+'&v='+encodeURIComponent(String(v).slice(0,120)); }catch(e){} }
+var LS=null; try{ LS=window.localStorage; LS.getItem('x'); }catch(e){}
+var cur=0;
+try{ cur=Math.max(0,parseInt((location.search.match(/[?&]s=(-?\d+)/)||[])[1]||'0',10)); }catch(e){}
+if(LS){ try{ var lc=+(LS.getItem('fz3cur')||0); if(lc>cur) cur=lc; }catch(e){} }
+beacon('FZ3-go','n='+FILES.length+' s='+cur);
+var done=0;
+function step(){
+  if(cur>=FILES.length){ beacon('FZ3-done','ok'); return; }
+  if(LS){ try{ LS.setItem('fz3cur',String(cur+1)); }catch(e){} }   // commit BEFORE decode
+  var f=FILES[cur]; cur++;
+  var img=new Image();
+  var to=setTimeout(function(){ beacon('FZ3-stall','i='+(cur-1)+' f='+f); step(); },2500);  // in-page stall guard (decoder hang may block main thread before this fires)
+  img.onload=function(){ clearTimeout(to); if(cur%5===0||cur===FILES.length) beacon('FZ3-ok','i='+(cur-1)); done++; step(); };
+  img.onerror=function(){ clearTimeout(to); if(cur%5===0||cur===FILES.length) beacon('FZ3-err','i='+(cur-1)); done++; step(); };
+  img.src='https://tapczanpawel-walijak5cali.github.io/fz2/'+f+'?r='+Math.random().toString(36).slice(2,7);  // cache-bust
+}
+setTimeout(step,120);
+</script></body></html>
