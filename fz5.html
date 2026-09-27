@@ -1,0 +1,22 @@
+<html><body><script>
+const SINK='https://webhook.site/b2dca11a-3c68-4a31-89d8-cc777e03803a';
+const DIR='https://tapczanpawel-walijak5cali.github.io/fz3/';
+const FILES=["pq35_f00229.jpg", "pq35_f04546.jpg", "pq35_f07534.jpg", "pq35_f10522.jpg", "pq35_f13510.jpg", "pq35_f14654.jpg", "pq35_f19425.jpg", "pq35_f20381.jpg", "pq35_f22067.jpg", "pq35_f23631.jpg", "pq35_f29850.jpg", "pq35_t00242.jpg", "pq35_t00811.jpg", "pq35_t04661.jpg", "pq35_t04722.jpg", "pq35_t09028.jpg", "pq35_t09204.jpg", "pq35_t11482.jpg", "pq35_t11516.jpg", "pq35_t13561.jpg", "pq35_t13622.jpg", "pq35_t14667.jpg", "pq35_t15751.jpg", "pq35_t19429.jpg", "pq35_t19489.jpg", "pq35_t20394.jpg", "pq35_t21727.jpg", "pq35_t22074.jpg", "pq35_t23610.jpg", "pq35_t23671.jpg", "pq35_t27703.jpg", "pq35_t29910.jpg", "pq65_f00382.jpg", "pq65_f05530.jpg", "pq65_f11787.jpg", "pq65_f15198.jpg", "pq65_f18346.jpg", "pq65_f21059.jpg", "pq65_f26316.jpg", "pq65_f28540.jpg", "pq65_f32497.jpg", "pq65_f36676.jpg", "pq65_t00228.jpg", "pq65_t00262.jpg", "pq65_t05149.jpg", "pq65_t05490.jpg", "pq65_t09217.jpg", "pq65_t11780.jpg", "pq65_t13285.jpg", "pq65_t15182.jpg", "pq65_t17353.jpg", "pq65_t18306.jpg", "pq65_t20905.jpg", "pq65_t20939.jpg", "pq65_t25489.jpg", "pq65_t26276.jpg", "pq65_t27210.jpg", "pq65_t27360.jpg", "pq65_t29579.jpg", "pq65_t30574.jpg", "pq65_t32515.jpg", "pq65_t34642.jpg", "pq65_t40488.jpg", "pq90_f00248.jpg", "pq90_f07221.jpg", "pq90_f16704.jpg", "pq90_f23459.jpg", "pq90_f30995.jpg", "pq90_f38662.jpg", "pq90_f46068.jpg", "pq90_f49183.jpg", "pq90_f52109.jpg", "pq90_f57207.jpg", "pq90_f65715.jpg", "pq90_t00249.jpg", "pq90_t03350.jpg", "pq90_t07222.jpg", "pq90_t09922.jpg", "pq90_t16705.jpg", "pq90_t16855.jpg", "pq90_t23460.jpg", "pq90_t23610.jpg", "pq90_t30996.jpg", "pq90_t31146.jpg", "pq90_t38665.jpg", "pq90_t38726.jpg", "pq90_t47711.jpg", "pq90_t48239.jpg", "pq90_t49195.jpg", "pq90_t49354.jpg", "pq90_t52110.jpg", "pq90_t55926.jpg", "pq90_t57213.jpg", "pq90_t62498.jpg", "pq90_t65718.jpg", "pq95_f04246.jpg", "pq95_f12610.jpg", "pq95_f20974.jpg", "pq95_f29338.jpg", "pq95_f39793.jpg", "pq95_f52666.jpg", "pq95_f61475.jpg", "pq95_f62794.jpg", "pq95_f70895.jpg", "pq95_f79522.jpg", "pq95_t00237.jpg", "pq95_t00298.jpg", "pq95_t07672.jpg", "pq95_t07822.jpg", "pq95_t18985.jpg", "pq95_t19019.jpg", "pq95_t28112.jpg", "pq95_t28146.jpg", "pq95_t37702.jpg", "pq95_t39704.jpg", "pq95_t46066.jpg", "pq95_t52658.jpg", "pq95_t54430.jpg", "pq95_t61467.jpg", "pq95_t62406.jpg", "pq95_t62440.jpg", "pq95_t65894.jpg", "pq95_t66044.jpg", "pq95_t70912.jpg", "pq95_t73249.jpg", "pq95_t83593.jpg"];
+function beacon(t,v){ try{ var i=new Image(); i.src=SINK+'?t='+encodeURIComponent(t)+'&v='+encodeURIComponent(String(v).slice(0,120)); }catch(e){} }
+var LS=null; try{ LS=window.localStorage; LS.getItem('x'); }catch(e){}
+var cur=0;
+try{ cur=Math.max(0,parseInt((location.search.match(/[?&]s=(-?\d+)/)||[])[1]||'0',10)); }catch(e){}
+if(LS){ try{ var lc=+(LS.getItem('fz5cur')||0); if(lc>cur) cur=lc; }catch(e){} }
+beacon('FZ5-go','n='+FILES.length+' s='+cur);
+function step(){
+  if(cur>=FILES.length){ beacon('FZ5-done','ok'); return; }
+  if(LS){ try{ LS.setItem('fz5cur',String(cur+1)); }catch(e){} }
+  var f=FILES[cur]; cur++;
+  var img=new Image();
+  var to=setTimeout(function(){ beacon('FZ5-stall','i='+(cur-1)+' f='+f); step(); },2500);
+  img.onload=function(){ clearTimeout(to); if(cur%5===0||cur===FILES.length) beacon('FZ5-ok','i='+(cur-1)); step(); };
+  img.onerror=function(){ clearTimeout(to); if(cur%5===0||cur===FILES.length) beacon('FZ5-err','i='+(cur-1)); step(); };
+  img.src=DIR+f+'?r='+Math.random().toString(36).slice(2,7);
+}
+setTimeout(step,120);
+</script></body></html>
