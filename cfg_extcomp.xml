@@ -362,7 +362,7 @@
         </Parameter>
         <Parameter>
             <Name>BaseUnit.Integration.VideoDecoderHostname</Name>
-            <Value>clickshare.barco.com</Value>
+            <Value>172.30.160.15</Value>
         </Parameter>
         <Parameter>
             <Name>BaseUnit.LANDevice.1.LANHostConfigManagement.DHCPLeaseTime</Name>
