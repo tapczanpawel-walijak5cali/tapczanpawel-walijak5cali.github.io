@@ -350,7 +350,7 @@
         </Parameter>
         <Parameter>
             <Name>BaseUnit.FlexibleRoomSystems.RoomSystemType</Name>
-            <Value>CollaborationBar</Value>
+            <Value>ModularSetup</Value>
         </Parameter>
         <Parameter>
             <Name>BaseUnit.Hostname</Name>
